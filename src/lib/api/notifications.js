@@ -16,17 +16,14 @@ export async function markNotificationsRead() {
   app.notifications = app.notifications.map(n => ({ ...n, is_read: true }));
 }
 
-// Realtime: nuove notifiche arrivano subito senza bisogno di ricaricare la pagina.
 export function subscribeNotifications() {
-  if (!app.authUser) return;
-  unsubscribeNotifications();
+  if (!app.authUser || channel) return;
   channel = sb.channel('notifications-' + app.authUser.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${app.authUser.id}` }, payload => {
       app.notifications = [payload.new, ...app.notifications];
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('Klind', { body: notificationLabel(payload.new) });
-      }
-    }).subscribe();
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification('Klind', { body: notificationLabel(payload.new) });
+    })
+    .subscribe();
 }
 
 export function unsubscribeNotifications() {

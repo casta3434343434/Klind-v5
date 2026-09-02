@@ -1,7 +1,3 @@
-// Ridimensiona un'immagine caricata dall'utente a un quadrato 256x256 (JPEG),
-// stessa logica 1:1 di resizeAvatar() nella versione vanilla: niente upload
-// su storage esterno, l'avatar viene salvato come data URL direttamente nel
-// campo avatar_url del profilo.
 export function resizeAvatar(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

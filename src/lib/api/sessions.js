@@ -1,7 +1,7 @@
 import { sb } from './supabaseClient.js';
 import { app } from '../stores/appState.svelte.js';
 
-function rowToSession(row) {
+export function rowToSession(row) {
   return { ...row.payload, id: row.id, data: row.data, disciplina: row.disciplina, privacy: row.privacy };
 }
 

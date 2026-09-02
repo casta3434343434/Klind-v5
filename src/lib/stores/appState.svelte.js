@@ -6,12 +6,6 @@
 export const app = $state({
   // sessione utente / navigazione
   language: (typeof localStorage !== 'undefined' && localStorage.getItem('klindLanguage')) || 'it',
-  // Specchio reattivo di localStorage('klindThemeMode'): le CSS variable del
-  // tema vengono cambiate direttamente sul DOM (vedi utils/theme.js), quindi
-  // di per sé non farebbero ripartire nessun $effect — questo campo esiste
-  // solo perché i grafici Chart.js (letti una volta sola alla creazione)
-  // possano "accorgersi" del cambio tema e ridisegnarsi con i colori giusti.
-  themeMode: (typeof localStorage !== 'undefined' && localStorage.getItem('klindThemeMode')) || 'dark',
   view: 'landing',        // 'landing' | 'auth' | 'app'
   appView: 'dashboard',   // vista interna una volta loggati (dashboard, history, social, ...)
   mobileMenuOpen: false,
@@ -30,16 +24,45 @@ export const app = $state({
   wellness: [],
   crags: [],
 
-  // social (Fase 9): amici, gruppi, sfide, feed, notifiche
-  friends: [],             // amici accettati: {id, username, avatar_url, is_developer, friendshipId}
-  friendRequests: [],      // richieste ricevute in sospeso: {friendshipId, from}
-  friendRequestsSent: [],  // richieste inviate in sospeso: {friendshipId, to}
-  friendFeed: [],          // sessioni non private degli amici (per feed + confronti)
-  feedReactions: {},       // { [sessionId]: [{id, user_id, reaction_type}, ...] }
-  feedComments: {},        // { [sessionId]: [{id, user_id, content, created_at}, ...] }
-  groups: [],              // {id, name, owner_id, members:[{id, username, avatar_url, is_developer}]}
-  challenges: [],          // {id, name, type, creator_id, ..., participantIds:[...]}
-  notifications: [],       // {id, user_id, actor_id, type, payload, is_read, created_at}
+  // social — amici, gruppi, feed, sfide, notifiche (Fase 9)
+  friends: [],
+  friendRequests: [],
+  friendRequestsSent: [],
+  friendFeed: [],
+  friendSearchResults: [],
+  friendSearchQuery: '',
+  friendSearchDone: false,
+  feedVisibleCount: 8,
+  feedFilterDiscipline: 'all',
+  feedFilterFriend: 'all',
+  feedReactions: {},
+  feedComments: {},
+  openCommentsFor: null,
+  reactionPickerFor: null,
+  groups: [],
+  showCreateGroup: false,
+  newGroupName: '',
+  newGroupMemberIds: [],
+  activeGroupId: null,
+  radarPersonA: '__me__',
+  radarPersonB: '',
+  radarMode: 'duo',
+  radarGroupId: null,
+  challenges: [],
+  showCreateChallenge: false,
+  newChallengeName: '',
+  newChallengeType: 'most_sessions',
+  newChallengeDisc: 'boulder',
+  newChallengeTargetGrade: '',
+  newChallengeEndDate: '',
+  newChallengeMemberIds: [],
+  notifications: [],
+  notifDropdownOpen: false,
+
+  // admin luoghi (Fase 10)
+  showCragsAdminInsideFalesia: false,
+  cragsAdminSearch: '',
+  cragsAdminExpandedId: null,
 
   // stato di caricamento iniziale dopo il login
   loadingUserData: false

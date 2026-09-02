@@ -1,10 +1,4 @@
-// Service worker "app shell", stessa struttura 1:1 dell'originale (install →
-// precache, activate → pulizia cache vecchie, fetch → network-first per la
-// navigazione con fallback offline, cache-first per il resto). Nome cache
-// diverso ('klind-svelte-v1' invece di 'klind-v5') per non ereditare/entrare
-// in conflitto con la cache della vecchia versione vanilla se pubblicate
-// sullo stesso dominio durante la transizione.
-const CACHE_NAME = 'klind-svelte-v1';
+const CACHE_NAME = 'klind-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -14,6 +8,7 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-maskable-512.png'
 ];
 
+// Install: pre-cache the app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
@@ -21,6 +16,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate: clean up old caches (cancella automaticamente klind-v4)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -32,6 +28,10 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Fetch:
+// - Richieste verso altri domini (Supabase, CDN) vanno sempre in rete per dati aggiornati
+// - La pagina stessa: network-first con fallback offline
+// - Icone e manifest: cache-first
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);

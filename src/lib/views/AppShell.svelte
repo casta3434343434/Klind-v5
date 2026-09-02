@@ -2,28 +2,21 @@
   import { app, setLanguage } from '../stores/appState.svelte.js';
   import { klindLogo, I18N, DEVELOPER_USER_ID } from '../constants.js';
   import { logout } from '../api/auth.js';
-  import { setThemeMode } from '../utils/theme.js';
+  import { getThemeMode, setThemeMode } from '../utils/theme.js';
   import Dashboard from './Dashboard.svelte';
   import History from './History.svelte';
   import Calendar from './Calendar.svelte';
   import Progress from './Progress.svelte';
-  import Tests from './Tests.svelte';
   import Wellness from './Wellness.svelte';
-  import Social from './Social.svelte';
+  import Test from './Test.svelte';
   import Falesia from './Falesia.svelte';
   import Profile from './Profile.svelte';
-  import NotifBell from './social/NotifBell.svelte';
+  import Social from './Social.svelte';
+  import NotifBell from './NotifBell.svelte';
   import SessionModal from './session/SessionModal.svelte';
   import DeleteConfirm from './session/DeleteConfirm.svelte';
 
   const t = (key) => I18N[app.language]?.[key] || I18N.it[key] || key;
-
-  function onThemeChange(e) {
-    setThemeMode(e.target.value);
-  }
-  function onLanguageChange(e) {
-    setLanguage(e.target.value);
-  }
 
   const navs = $derived([
     { id: 'dashboard', label: t('nav_home') },
@@ -37,7 +30,7 @@
     { id: 'history', label: t('nav_history') }
   ]);
 
-  const IMPLEMENTED = new Set(['dashboard', 'history', 'calendar', 'progress', 'tests', 'wellness', 'social', 'falesie', 'profile']);
+  const IMPLEMENTED = new Set(['dashboard', 'history', 'calendar', 'progress', 'tests', 'wellness', 'falesie', 'profile', 'social']);
 
   function goView(id) {
     app.appView = id;
@@ -46,21 +39,28 @@
 
   const isVerified = $derived(!!app.profile?.can_edit_crags);
   const isDeveloper = $derived(app.authUser?.id === DEVELOPER_USER_ID || !!app.profile?.is_developer);
+
+  let themeMode = $state(getThemeMode());
+  function onThemeChange(e) {
+    themeMode = e.target.value;
+    setThemeMode(themeMode);
+  }
+  function onLanguageChange(e) {
+    setLanguage(e.target.value);
+  }
 </script>
 
 {#snippet themeControls()}
   <div class="theme-controls">
     <h4>Tema</h4>
-    <div class="field">
-      <label for="themeMode">Aspetto</label>
-      <select id="themeMode" value={app.themeMode} onchange={onThemeChange}>
+    <div class="field"><label>Aspetto</label>
+      <select value={themeMode} onchange={onThemeChange}>
         <option value="light">Chiaro</option>
         <option value="dark">Scuro</option>
       </select>
     </div>
-    <div class="field">
-      <label for="languageSelect">{t('lang_label')}</label>
-      <select id="languageSelect" value={app.language} onchange={onLanguageChange}>
+    <div class="field"><label>{t('lang_label')}</label>
+      <select value={app.language} onchange={onLanguageChange}>
         <option value="it">Italiano</option>
         <option value="en">English</option>
       </select>
@@ -104,11 +104,11 @@
       {#if app.appView === 'history'}<History />{/if}
       {#if app.appView === 'calendar'}<Calendar />{/if}
       {#if app.appView === 'progress'}<Progress />{/if}
-      {#if app.appView === 'tests'}<Tests />{/if}
+      {#if app.appView === 'tests'}<Test />{/if}
       {#if app.appView === 'wellness'}<Wellness />{/if}
-      {#if app.appView === 'social'}<Social />{/if}
       {#if app.appView === 'falesie'}<Falesia />{/if}
       {#if app.appView === 'profile'}<Profile />{/if}
+      {#if app.appView === 'social'}<Social />{/if}
     {:else}
       <div class="empty-state" style="margin-top:40px;">
         Questa sezione arriva in una fase successiva del porting (vedi PLAN.md) — per ora usa la versione precedente per {navs.find(n => n.id === app.appView)?.label.toLowerCase()}.

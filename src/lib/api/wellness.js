@@ -13,11 +13,3 @@ export async function upsertWellness(entry) {
   if (error) { alert('Errore salvataggio: ' + error.message); return null; }
   return { ...data.payload, id: data.id, data: data.data };
 }
-
-// Non presente nell'originale (che non aveva modo di eliminare una voce di
-// benessere già salvata) — aggiunta su richiesta esplicita dell'utente.
-export async function deleteWellnessRemote(id) {
-  const { error } = await sb.from('wellness').delete().eq('id', id);
-  if (error) { alert('Errore eliminazione: ' + error.message); return false; }
-  return true;
-}

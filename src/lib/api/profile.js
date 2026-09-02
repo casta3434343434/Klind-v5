@@ -3,9 +3,7 @@ import { sb } from './supabaseClient.js';
 // Selezione esplicita dei campi (mai select('*')): stesso fix di sicurezza
 // già applicato alla versione vanilla — non si tira dietro più dati di quanti
 // l'app ne usi davvero.
-// 'scala' inclusa (mancava: veniva letta altrove — es. il form nuova sessione —
-// ma non era mai caricata dal database, quindi restava sempre sul default).
-const PROFILE_FIELDS = 'id,username,avatar_url,is_developer,can_edit_crags,altezza,eta,peso,apertura,anni,obiettivo,scala';
+const PROFILE_FIELDS = 'id,username,avatar_url,is_developer,can_edit_crags,altezza,eta,peso,apertura,anni,obiettivo';
 
 export async function fetchProfile(userId) {
   const { data, error } = await sb.from('profiles').select(PROFILE_FIELDS).eq('id', userId).maybeSingle();

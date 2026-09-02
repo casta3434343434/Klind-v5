@@ -5,22 +5,24 @@
   function goLogin() { app.authMode = 'login'; app.authError = ''; app.view = 'auth'; }
   function goSignup() { app.authMode = 'signup'; app.authError = ''; app.view = 'auth'; }
 
-  // Griglia decorativa dell'hero, portata 1:1 da drawHero() dell'originale:
-  // una finta "via" di boulder tracciata su una griglia 9x9 di appigli.
-  const cols = 9, rows = 9, pad = 30;
-  const size = (360 - pad * 2) / (cols - 1);
-  const path = [4, 13, 23, 31, 40, 49, 57, 66];
-  const dots = Array.from({ length: rows * cols }, (_, idx) => {
-    const c = idx % cols, r = Math.floor(idx / cols);
-    const on = path.includes(idx);
-    return { cx: pad + c * size, cy: pad + r * size, r: on ? 5 : 3, fill: on ? '#b6422d' : 'rgba(242,238,226,0.12)' };
-  });
-  const lines = path.slice(0, -1).map((a, i) => {
-    const b = path[i + 1];
-    return {
-      x1: pad + (a % cols) * size, y1: pad + Math.floor(a / cols) * size,
-      x2: pad + (b % cols) * size, y2: pad + Math.floor(b / cols) * size
-    };
+  let heroSvg;
+  $effect(() => {
+    if (!heroSvg) return;
+    const cols = 9, rows = 9, pad = 30, size = (360 - pad * 2) / (cols - 1);
+    const path = [4, 13, 23, 31, 40, 49, 57, 66];
+    let d = '';
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c, cx = pad + c * size, cy = pad + r * size;
+      const on = path.includes(idx);
+      d += `<circle cx="${cx}" cy="${cy}" r="${on ? 5 : 3}" fill="${on ? '#b6422d' : 'rgba(242,238,226,0.12)'}"/>`;
+    }
+    for (let i = 0; i < path.length - 1; i++) {
+      const a = path[i], b = path[i + 1];
+      const ax = pad + (a % cols) * size, ay = pad + Math.floor(a / cols) * size;
+      const bx = pad + (b % cols) * size, by = pad + Math.floor(b / cols) * size;
+      d += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#b8690a" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.5"/>`;
+    }
+    heroSvg.innerHTML = d;
   });
 </script>
 
@@ -41,12 +43,7 @@
       <button class="btn btn-ghost" onclick={goLogin}>Accedi</button>
     </div>
   </div>
-  <div class="hero-grid">
-    <svg viewBox="0 0 360 360">
-      {#each dots as d}<circle cx={d.cx} cy={d.cy} r={d.r} fill={d.fill} />{/each}
-      {#each lines as l}<line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#b8690a" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.5" />{/each}
-    </svg>
-  </div>
+  <div class="hero-grid"><svg bind:this={heroSvg} viewBox="0 0 360 360"></svg></div>
 </section>
 
 <div class="stripe">

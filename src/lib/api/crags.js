@@ -23,9 +23,6 @@ export async function addCrag(nome, tipo, indirizzo, zona) {
   return data;
 }
 
-// Aggiornamento campi da parte di utenti Verificati (Fase 10 — database
-// falesie condiviso). La RLS lato Supabase deve comunque impedire scritture
-// non autorizzate; questo controllo lato client è solo un UX-guard.
 export async function updateCragDetails(id, fields) {
   if (!app.profile?.can_edit_crags) { alert('Solo gli utenti verificati possono modificare le falesie.'); return null; }
   const { data, error } = await sb.from('crags').update(fields).eq('id', id).select().single();
@@ -42,5 +39,6 @@ export async function deleteCrag(id) {
   const { error } = await sb.from('crags').delete().eq('id', id);
   if (error) { alert('Errore eliminazione: ' + error.message); return false; }
   app.crags = app.crags.filter(c => c.id !== id);
+  if (app.cragsAdminExpandedId === id) app.cragsAdminExpandedId = null;
   return true;
 }

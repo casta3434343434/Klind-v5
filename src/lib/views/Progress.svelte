@@ -1,17 +1,17 @@
 <script>
-  import Chart from 'chart.js/auto';
   import { app } from '../stores/appState.svelte.js';
   import { DISCIPLINES, DISCIPLINE_LABELS, ROUTE_SCALE } from '../constants.js';
   import { today, parseDate, localDateKey, startOfWeek } from '../utils/dates.js';
   import { sessionGrade, normalizedGradeValue, commonFrenchGradeFromNormalized, chartGradeLabel } from '../utils/grades.js';
   import { chartTheme, chartFill, discColor, disciplineThemeKey } from '../utils/charts.js';
+  import { loadChart } from '../utils/chartLoader.js';
   import { buildHeatmap } from '../utils/heatmap.js';
 
   let hoursMode = $state('all');    // 'all' | 'week'
   let sessionsMode = $state('all');
   let avgHoursMode = $state('all');
   let progressFilter = $state('boulder'); // disciplina o 'summary'
-  let progressRange = $state('all');      // 'week' | 'month' | '3months' | '6months' | 'year' | 'all' — default coerente con l'originale (state.progressRange:'all')
+  let progressRange = $state('week');     // per il grafico "media gradi"
 
   const weekStart = startOfWeek(new Date());
 
@@ -56,70 +56,74 @@
   $effect(() => {
     const disc = progressFilter;
     const filtered = rangedSessions;
-    void app.sessions.length; void disc; void progressRange; void app.themeMode;
+    void app.sessions.length; void disc; void progressRange;
 
-    destroyCharts();
-    const theme = chartTheme();
-    Chart.defaults.color = theme.text;
-    Chart.defaults.font.family = "'IBM Plex Mono', monospace";
-    Chart.defaults.font.size = 12;
+    let cancelled = false;
+    loadChart().then((Chart) => {
+      if (cancelled) return;
+      destroyCharts();
+      const theme = chartTheme();
+      Chart.defaults.color = theme.text;
+      Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+      Chart.defaults.font.size = 12;
 
-    if (gradeCanvas) {
-      if (disc !== 'summary') {
-        const pts = filtered
-          .filter(s => s.disciplina === disc && sessionGrade(s, disc))
-          .map(s => { const grado = sessionGrade(s, disc); return { x: s.data, y: normalizedGradeValue(disc, grado), grade: grado }; })
-          .filter(p => p.y !== null && p.y >= 0)
-          .sort((a, b) => a.x.localeCompare(b.x));
+      if (gradeCanvas) {
+        if (disc !== 'summary') {
+          const pts = filtered
+            .filter(s => s.disciplina === disc && sessionGrade(s, disc))
+            .map(s => { const grado = sessionGrade(s, disc); return { x: s.data, y: normalizedGradeValue(disc, grado), grade: grado }; })
+            .filter(p => p.y !== null && p.y >= 0)
+            .sort((a, b) => a.x.localeCompare(b.x));
 
-        if (pts.length) {
-          charts.grade = new Chart(gradeCanvas, {
-            type: 'line',
-            data: { labels: pts.map(p => p.x.split('-').reverse().join('/')), datasets: [{ data: pts.map(p => p.y), rawGrades: pts.map(p => p.grade), borderColor: theme[disciplineThemeKey(disc)], backgroundColor: chartFill(theme[disciplineThemeKey(disc)], .14), fill: true, tension: .25, pointRadius: 4, pointBackgroundColor: theme[disciplineThemeKey(disc)] }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => chartGradeLabel(disc, c.dataset.rawGrades?.[c.dataIndex]) } } }, scales: { x: { ticks: { color: theme.text }, grid: { color: theme.grid } }, y: { ticks: { color: theme.text, callback: v => commonFrenchGradeFromNormalized(v) }, grid: { color: theme.grid }, min: 0, max: ROUTE_SCALE.length - 1 } } }
-          });
+          if (pts.length) {
+            charts.grade = new Chart(gradeCanvas, {
+              type: 'line',
+              data: { labels: pts.map(p => p.x.split('-').reverse().join('/')), datasets: [{ data: pts.map(p => p.y), rawGrades: pts.map(p => p.grade), borderColor: theme[disciplineThemeKey(disc)], backgroundColor: chartFill(theme[disciplineThemeKey(disc)], .14), fill: true, tension: .25, pointRadius: 4, pointBackgroundColor: theme[disciplineThemeKey(disc)] }] },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => chartGradeLabel(disc, c.dataset.rawGrades?.[c.dataIndex]) } } }, scales: { x: { ticks: { color: theme.text }, grid: { color: theme.grid } }, y: { ticks: { color: theme.text, callback: v => commonFrenchGradeFromNormalized(v) }, grid: { color: theme.grid }, min: 0, max: ROUTE_SCALE.length - 1 } } }
+            });
+          } else {
+            charts.grade = new Chart(gradeCanvas, { type: 'line', data: { labels: ['Nessun dato'], datasets: [{ data: [0], borderColor: theme.accent }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } } });
+          }
         } else {
-          charts.grade = new Chart(gradeCanvas, { type: 'line', data: { labels: ['Nessun dato'], datasets: [{ data: [0], borderColor: theme.accent }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } } });
+          const summaryDates = [...new Set(filtered.filter(s => DISCIPLINES.includes(s.disciplina)).map(s => s.data))].sort();
+          const datasets = DISCIPLINES.map(d => {
+            const color = theme[disciplineThemeKey(d)];
+            return {
+              label: DISCIPLINE_LABELS[d],
+              data: summaryDates.map(date => {
+                const values = filtered.filter(s => s.data === date && s.disciplina === d).map(s => normalizedGradeValue(d, sessionGrade(s, d))).filter(v => v !== null);
+                return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+              }),
+              borderColor: color, backgroundColor: chartFill(color, .10), pointBackgroundColor: color, fill: true, tension: .25, spanGaps: true, pointRadius: 4
+            };
+          });
+          charts.grade = new Chart(gradeCanvas, { type: 'line', data: { labels: summaryDates.map(d => d.split('-').reverse().join('/')), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: theme.text } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y === null ? '—' : commonFrenchGradeFromNormalized(c.parsed.y)}` } } }, scales: { x: { ticks: { color: theme.text }, grid: { color: theme.grid } }, y: { min: 0, max: ROUTE_SCALE.length - 1, grid: { color: theme.grid }, ticks: { color: theme.text, callback: v => commonFrenchGradeFromNormalized(v) } } } } });
         }
-      } else {
-        const summaryDates = [...new Set(filtered.filter(s => DISCIPLINES.includes(s.disciplina)).map(s => s.data))].sort();
-        const datasets = DISCIPLINES.map(d => {
-          const color = theme[disciplineThemeKey(d)];
-          return {
-            label: DISCIPLINE_LABELS[d],
-            data: summaryDates.map(date => {
-              const values = filtered.filter(s => s.data === date && s.disciplina === d).map(s => normalizedGradeValue(d, sessionGrade(s, d))).filter(v => v !== null);
-              return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
-            }),
-            borderColor: color, backgroundColor: chartFill(color, .10), pointBackgroundColor: color, fill: true, tension: .25, spanGaps: true, pointRadius: 4
-          };
-        });
-        charts.grade = new Chart(gradeCanvas, { type: 'line', data: { labels: summaryDates.map(d => d.split('-').reverse().join('/')), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: theme.text } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y === null ? '—' : commonFrenchGradeFromNormalized(c.parsed.y)}` } } }, scales: { x: { ticks: { color: theme.text }, grid: { color: theme.grid } }, y: { min: 0, max: ROUTE_SCALE.length - 1, grid: { color: theme.grid }, ticks: { color: theme.text, callback: v => commonFrenchGradeFromNormalized(v) } } } } });
       }
-    }
 
-    if (avgCanvas) {
-      const byDate = {};
-      filtered.forEach(s => {
-        if (!DISCIPLINES.includes(s.disciplina)) return;
-        const value = normalizedGradeValue(s.disciplina, sessionGrade(s, s.disciplina));
-        if (value === null) return;
-        (byDate[s.data] = byDate[s.data] || []).push(value);
-      });
-      const dates = Object.keys(byDate).sort();
-      const values = dates.map(d => byDate[d].reduce((a, b) => a + b, 0) / byDate[d].length);
-      charts.average = new Chart(avgCanvas, { type: 'line', data: { labels: dates.map(d => d.split('-').reverse().join('/')), datasets: [{ data: values, borderColor: theme.text, backgroundColor: chartFill(theme.text, .08), fill: true, tension: .25, pointRadius: 4, pointBackgroundColor: theme.text }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Media: ${commonFrenchGradeFromNormalized(c.parsed.y)}` } } }, scales: { x: { ticks: { color: theme.text }, grid: { color: theme.grid } }, y: { min: 0, max: ROUTE_SCALE.length - 1, grid: { color: theme.grid }, ticks: { color: theme.text, callback: v => commonFrenchGradeFromNormalized(v) } } } } });
-    }
+      if (avgCanvas) {
+        const byDate = {};
+        filtered.forEach(s => {
+          if (!DISCIPLINES.includes(s.disciplina)) return;
+          const value = normalizedGradeValue(s.disciplina, sessionGrade(s, s.disciplina));
+          if (value === null) return;
+          (byDate[s.data] = byDate[s.data] || []).push(value);
+        });
+        const dates = Object.keys(byDate).sort();
+        const values = dates.map(d => byDate[d].reduce((a, b) => a + b, 0) / byDate[d].length);
+        charts.average = new Chart(avgCanvas, { type: 'line', data: { labels: dates.map(d => d.split('-').reverse().join('/')), datasets: [{ data: values, borderColor: theme.text, backgroundColor: chartFill(theme.text, .08), fill: true, tension: .25, pointRadius: 4, pointBackgroundColor: theme.text }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Media: ${commonFrenchGradeFromNormalized(c.parsed.y)}` } } }, scales: { x: { ticks: { color: theme.text }, grid: { color: theme.grid } }, y: { min: 0, max: ROUTE_SCALE.length - 1, grid: { color: theme.grid }, ticks: { color: theme.text, callback: v => commonFrenchGradeFromNormalized(v) } } } } });
+      }
 
-    if (distCanvas) {
-      const counts = {};
-      app.sessions.forEach(s => { counts[s.disciplina] = (counts[s.disciplina] || 0) + 1; });
-      const labels = Object.keys(counts).map(d => DISCIPLINE_LABELS[d] || d);
-      const colors = Object.keys(counts).map(discColor);
-      charts.dist = new Chart(distCanvas, { type: 'doughnut', data: { labels, datasets: [{ data: Object.values(counts), backgroundColor: colors, borderColor: theme.surface, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, color: theme.text } } } } });
-    }
+      if (distCanvas) {
+        const counts = {};
+        app.sessions.forEach(s => { counts[s.disciplina] = (counts[s.disciplina] || 0) + 1; });
+        const labels = Object.keys(counts).map(d => DISCIPLINE_LABELS[d] || d);
+        const colors = Object.keys(counts).map(discColor);
+        charts.dist = new Chart(distCanvas, { type: 'doughnut', data: { labels, datasets: [{ data: Object.values(counts), backgroundColor: colors, borderColor: theme.surface, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, color: theme.text } } } } });
+      }
+    });
 
-    return destroyCharts;
+    return () => { cancelled = true; destroyCharts(); };
   });
 
   const heatmapCells = $derived(buildHeatmap(app.sessions));

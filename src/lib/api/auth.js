@@ -2,10 +2,10 @@ import { sb } from './supabaseClient.js';
 import { app } from '../stores/appState.svelte.js';
 import { fetchProfile } from './profile.js';
 import { fetchSessions } from './sessions.js';
-import { fetchTests } from './tests.js';
-import { fetchWellness } from './wellness.js';
 import { loadCrags } from './crags.js';
-import { refreshFriendsData } from './social.js';
+import { fetchWellness } from './wellness.js';
+import { fetchTests } from './tests.js';
+import { loadFriendsData } from './friends.js';
 import { loadGroups } from './groups.js';
 import { loadChallenges } from './challenges.js';
 import { loadNotifications, subscribeNotifications, unsubscribeNotifications } from './notifications.js';
@@ -13,27 +13,20 @@ import { loadNotifications, subscribeNotifications, unsubscribeNotifications } f
 export async function loadAllUserData(userId) {
   app.loadingUserData = true;
   try {
-    const [profile, sessions, tests, wellness] = await Promise.all([
+    const [profile, sessions, wellness, tests] = await Promise.all([
       fetchProfile(userId),
       fetchSessions(userId),
-      fetchTests(userId),
       fetchWellness(userId),
+      fetchTests(userId),
       loadCrags()
     ]);
     app.profile = profile || {};
     app.sessions = sessions;
-    app.tests = tests;
     app.wellness = wellness;
+    app.tests = tests;
     app.user = profile?.username || app.authUser?.email || '';
-
-    // Dati social: amici/feed devono essere caricati prima di gruppi/sfide/notifiche
-    // solo per coerenza logica, ma sono indipendenti — partono in parallelo.
-    await Promise.all([
-      refreshFriendsData(),
-      loadGroups(),
-      loadChallenges(),
-      loadNotifications()
-    ]);
+    // Dati sociali: non bloccano il primo render se falliscono/impiegano tempo.
+    await Promise.all([loadFriendsData(), loadGroups(), loadChallenges(), loadNotifications()]);
     subscribeNotifications();
   } finally {
     app.loadingUserData = false;
@@ -83,18 +76,8 @@ export async function handleSignup(email, password, username) {
     app.user = username;
     app.profile = { username, altezza: '', eta: '', peso: '', apertura: '', anni: '', obiettivo: 3 };
     app.sessions = [];
-    app.tests = [];
-    app.wellness = [];
-    app.friends = [];
-    app.friendRequests = [];
-    app.friendRequestsSent = [];
-    app.friendFeed = [];
-    app.groups = [];
-    app.challenges = [];
-    app.notifications = [];
     app.view = 'app';
     app.appView = 'dashboard';
-    subscribeNotifications();
     return true;
   } finally {
     app.authBusy = false;
@@ -108,14 +91,12 @@ export async function logout() {
   app.user = null;
   app.profile = null;
   app.sessions = [];
-  app.tests = [];
   app.wellness = [];
+  app.tests = [];
   app.friends = [];
   app.friendRequests = [];
   app.friendRequestsSent = [];
   app.friendFeed = [];
-  app.feedReactions = {};
-  app.feedComments = {};
   app.groups = [];
   app.challenges = [];
   app.notifications = [];

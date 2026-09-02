@@ -1,17 +1,13 @@
 import { sb } from './supabaseClient.js';
 import { app } from '../stores/appState.svelte.js';
 
-export async function fetchGroups() {
+export async function loadGroups() {
   const { data, error } = await sb.from('groups').select('id,name,owner_id,group_members(user_id, member:user_id(id,username,avatar_url,is_developer))');
-  if (error) { console.error(error); return []; }
-  return (data || []).map(g => ({
+  if (error) { console.error(error); app.groups = []; return; }
+  app.groups = (data || []).map(g => ({
     id: g.id, name: g.name, owner_id: g.owner_id,
     members: (g.group_members || []).map(m => m.member).filter(Boolean)
   }));
-}
-
-export async function loadGroups() {
-  app.groups = await fetchGroups();
 }
 
 export async function createGroup(name, memberIds) {
@@ -27,6 +23,9 @@ export async function createGroup(name, memberIds) {
     alert('Errore aggiunta membri: ' + memErr.message);
     return;
   }
+  app.showCreateGroup = false;
+  app.newGroupName = '';
+  app.newGroupMemberIds = [];
   await loadGroups();
 }
 
@@ -35,12 +34,14 @@ export async function deleteGroup(groupId) {
   if (membersError) { alert('Errore eliminazione membri: ' + membersError.message); return; }
   const { error } = await sb.from('groups').delete().eq('id', groupId);
   if (error) { alert('Errore: ' + error.message); return; }
+  if (app.activeGroupId === groupId) app.activeGroupId = null;
   await loadGroups();
 }
 
 export async function leaveGroup(groupId) {
   const { error } = await sb.from('group_members').delete().eq('group_id', groupId).eq('user_id', app.authUser.id);
   if (error) { alert('Errore: ' + error.message); return; }
+  if (app.activeGroupId === groupId) app.activeGroupId = null;
   await loadGroups();
 }
 

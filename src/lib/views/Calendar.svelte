@@ -4,7 +4,6 @@
   import { today, fmt, parseDate } from '../utils/dates.js';
   import { sessionGrade, displaySessionGrade } from '../utils/grades.js';
   import { openNewSession, openEditSession } from '../stores/sessionModal.svelte.js';
-  import { discColor } from '../utils/theme.js';
 
   let calMonth = $state(new Date());
   let dayPanel = $state(null);
@@ -43,16 +42,6 @@
     dayPanel = dayPanel === ds ? null : ds;
   }
 
-  // Giorni con sessioni di più discipline diverse prendono un gradiente
-  // diagonale a due colori (uno per disciplina), come nell'originale, invece
-  // di mostrare solo il colore della prima disciplina di quel giorno.
-  function cellStyle(disciplines, selected) {
-    if (disciplines.length < 2) return '';
-    const first = selected ? 'var(--lime)' : discColor(disciplines[0]);
-    const second = discColor(disciplines[1]);
-    return `background:linear-gradient(135deg,color-mix(in srgb,${first} ${selected ? 16 : 18}%,transparent) 0 50%,color-mix(in srgb,${second} 18%,transparent) 50% 100%);`;
-  }
-
   const dayList = $derived(dayPanel ? (app.sessions.filter(s => s.data === dayPanel)) : []);
 </script>
 
@@ -75,11 +64,9 @@
       {:else}
         {@const ds = cellDate(d)}
         {@const sess = byDate[ds] || []}
-        {@const disciplines = [...new Set(sess.map(s => s.disciplina))]}
-        {@const selected = ds === dayPanel}
+        {@const disc = sess[0]?.disciplina}
         <div
-          class="cal-cell {ds === todayS ? 'today' : ''} {disciplines.length ? `has-session-${disciplines[0]}` : ''} {selected ? 'selected-day' : ''}"
-          style={cellStyle(disciplines, selected)}
+          class="cal-cell {ds === todayS ? 'today' : ''} {disc ? `has-session-${disc}` : ''} {ds === dayPanel ? 'selected-day' : ''}"
           onclick={() => openDay(ds)}
         >
           <div class="d">{d}</div>

@@ -25,3 +25,10 @@ export function startOfWeek(d) {
   r.setHours(0, 0, 0, 0);
   return r;
 }
+
+export function estimatedKcal(sessions, date, weight) {
+  const minutes = sessions.filter(s => s.data === date).reduce((sum, s) => sum + (parseFloat(s.durata) || 0), 0);
+  const kg = parseFloat(weight);
+  if (!minutes || !kg) return '';
+  return Math.round(8 * 3.5 * kg / 200 * minutes);
+}

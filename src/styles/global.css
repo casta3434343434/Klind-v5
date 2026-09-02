@@ -441,12 +441,7 @@ tr:hover td{background:var(--bg-alt);}
 .notif-bell{position:relative;cursor:pointer;background:none;border:0;color:var(--muted);padding:6px;display:flex;align-items:center;}
 .notif-bell.has-unread{color:var(--rust);}
 .notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:var(--rust);border:2px solid var(--surface);}
-/* left:0 invece di right:0 dell'originale: qui la campanella vive nella riga
-   del logo, vicino al bordo destro di una sidebar stretta (220px) — con
-   right:0 il pannello di 320px si apriva quasi tutto a sinistra del bordo
-   della pagina, tagliato e illeggibile. Aprendolo verso destra (dentro
-   l'area di contenuto, molto più ampia) resta sempre visibile per intero. */
-.notif-dropdown{position:absolute;left:0;top:100%;margin-top:8px;width:320px;max-height:400px;overflow-y:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;}
+.notif-dropdown{position:absolute;right:0;top:100%;margin-top:8px;width:320px;max-height:400px;overflow-y:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50;}
 .notif-item{padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;}
 .notif-item:last-child{border-bottom:none;}
 .notif-item.unread{background:rgba(182,66,45,0.08);}

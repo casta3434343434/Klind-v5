@@ -1,7 +1,7 @@
 import { mount } from 'svelte'
 import './styles/global.css'
-import { applyTheme } from './lib/utils/theme.js'
 import App from './App.svelte'
+import { applyTheme } from './lib/utils/theme.js'
 
 applyTheme();
 
@@ -11,9 +11,7 @@ const app = mount(App, {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch((err) => {
-      console.warn('Registrazione service worker fallita:', err);
-    });
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.error('SW registration failed:', err));
   });
 }
 
