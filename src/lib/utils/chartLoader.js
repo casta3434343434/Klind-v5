@@ -1,6 +1,6 @@
 // Chart.js pesa da solo la maggior parte del bundle principale (vedi PLAN.md,
 // nota tecnica in Fase 7/11). Le viste che disegnano grafici (Progress,
-// Wellness, Test, Social) lo importano dinamicamente tramite questa funzione
+// Test, Social) lo importano dinamicamente tramite questa funzione
 // invece che con un `import` statico in cima al file: Vite lo isola così in
 // un chunk separato, scaricato dal browser solo quando l'utente apre una di
 // quelle viste, non nel bundle iniziale dell'app.

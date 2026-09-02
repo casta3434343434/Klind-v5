@@ -21,7 +21,6 @@ export const app = $state({
   // dati principali
   sessions: [],
   tests: [],
-  wellness: [],
   crags: [],
 
   // social — amici, gruppi, feed, sfide, notifiche (Fase 9)
@@ -60,7 +59,6 @@ export const app = $state({
   notifDropdownOpen: false,
 
   // admin luoghi (Fase 10)
-  showCragsAdminInsideFalesia: false,
   cragsAdminSearch: '',
   cragsAdminExpandedId: null,
 

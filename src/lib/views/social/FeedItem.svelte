@@ -1,12 +1,12 @@
 <script>
   import { app } from '../../stores/appState.svelte.js';
   import { DISCIPLINE_LABELS, SESSION_MOODS } from '../../constants.js';
-  import { sessionGrade, displaySessionGrade, isFeedRecord } from '../../utils/grades.js';
+  import { sessionGrade, sessionDisciplines, displaySessionGrade, isFeedRecord } from '../../utils/grades.js';
   import { toggleReaction, addComment } from '../../api/feed.js';
 
   let { r } = $props();
 
-  const grade = $derived(sessionGrade(r, r.disciplina));
+  const disciplines = $derived(sessionDisciplines(r));
   const friend = $derived(app.friends.find(f => f.id === r.authorId));
   const reactions = $derived(app.feedReactions[r.id] || []);
   const comments = $derived(app.feedComments[r.id] || []);
@@ -34,8 +34,7 @@
     <div class="feed-main">
       <div class="feed-line1">
         <b>{r.authorName}</b>{#if friend?.is_developer}<span class="developer-badge">Developer</span>{/if}
-        <span class="chip chip-{r.disciplina}">{DISCIPLINE_LABELS[r.disciplina] || r.disciplina}</span>
-        {#if grade}<b> {displaySessionGrade(r, grade)}</b>{/if}
+        {#each disciplines as disc}<span class="chip chip-{disc}">{DISCIPLINE_LABELS[disc]}</span>{#if sessionGrade(r, disc)} <b>{displaySessionGrade(r, sessionGrade(r, disc), undefined, disc)}</b>{/if}{/each}
         {#if isRecord} 🏆{/if}
       </div>
       <div class="sub" style="font-size:12px;">{r.data.split('-').reverse().join('/')}{#if mood} · {mood.label}{/if}</div>

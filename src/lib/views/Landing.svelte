@@ -59,11 +59,10 @@
   <div class="feature-grid">
     <div class="feature"><div class="tag">01</div><h3>Calendario</h3><p>Vedi le sessioni giorno per giorno.</p></div>
     <div class="feature"><div class="tag">02</div><h3>Dettaglio</h3><p>Campi specifici per ogni disciplina.</p></div>
-    <div class="feature"><div class="tag">03</div><h3>Contesto</h3><p>Sonno, alimentazione, forma.</p></div>
+    <div class="feature"><div class="tag">03</div><h3>Benessere</h3><p>Sonno, alimentazione, peso e recupero.</p></div>
     <div class="feature"><div class="tag">04</div><h3>Grafici</h3><p>Progressi nel tempo.</p></div>
     <div class="feature"><div class="tag">05</div><h3>Test</h3><p>Forza misurata, non stimata.</p></div>
-    <div class="feature"><div class="tag">06</div><h3>Falesia</h3><p>Vie outdoor, settori e database condiviso.</p></div>
-    <div class="feature"><div class="tag">🩺</div><h3>Prevenzione</h3><p>Traccia dolori e infortuni.</p></div>
+    <div class="feature"><div class="tag">07</div><h3>Progressi</h3><p>Tabella, piramide e guida prese per leggere meglio i tuoi dati.</p></div>
   </div>
 </section>
 

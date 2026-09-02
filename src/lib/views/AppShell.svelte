@@ -7,9 +7,7 @@
   import History from './History.svelte';
   import Calendar from './Calendar.svelte';
   import Progress from './Progress.svelte';
-  import Wellness from './Wellness.svelte';
   import Test from './Test.svelte';
-  import Falesia from './Falesia.svelte';
   import Profile from './Profile.svelte';
   import Social from './Social.svelte';
   import NotifBell from './NotifBell.svelte';
@@ -23,14 +21,12 @@
     { id: 'calendar', label: t('nav_calendar') },
     { id: 'progress', label: t('nav_progress') },
     { id: 'tests', label: t('nav_tests') },
-    { id: 'wellness', label: t('nav_wellness') },
-    { id: 'falesie', label: t('nav_falesie') },
     { id: 'profile', label: t('nav_profile') },
     { id: 'social', label: t('nav_social') },
     { id: 'history', label: t('nav_history') }
   ]);
 
-  const IMPLEMENTED = new Set(['dashboard', 'history', 'calendar', 'progress', 'tests', 'wellness', 'falesie', 'profile', 'social']);
+  const IMPLEMENTED = new Set(['dashboard', 'history', 'calendar', 'progress', 'tests', 'profile', 'social']);
 
   function goView(id) {
     app.appView = id;
@@ -68,7 +64,7 @@
   </div>
 {/snippet}
 
-<div class="app-shell">
+<div class="app-shell {app.notifDropdownOpen ? 'notifications-open' : ''}">
   <div class="sidebar">
     <div class="brand" style="justify-content:space-between;display:flex;align-items:center;">
       {@html klindLogo} KLIND <NotifBell />
@@ -105,8 +101,6 @@
       {#if app.appView === 'calendar'}<Calendar />{/if}
       {#if app.appView === 'progress'}<Progress />{/if}
       {#if app.appView === 'tests'}<Test />{/if}
-      {#if app.appView === 'wellness'}<Wellness />{/if}
-      {#if app.appView === 'falesie'}<Falesia />{/if}
       {#if app.appView === 'profile'}<Profile />{/if}
       {#if app.appView === 'social'}<Social />{/if}
     {:else}

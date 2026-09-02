@@ -1,13 +1,12 @@
 <script>
   import { DISCIPLINES, DISCIPLINE_LABELS } from '../../constants.js';
-  import { modal, closeModal, submitSession, requestDelete } from '../../stores/sessionModal.svelte.js';
+  import { modal, closeModal, submitSession, requestDelete, addDiscipline, removeDiscipline } from '../../stores/sessionModal.svelte.js';
   import CragPicker from './CragPicker.svelte';
   import DisciplineFields from './DisciplineFields.svelte';
-  import SensazioniPanel from './SensazioniPanel.svelte';
+  import SessionDatePicker from './SessionDatePicker.svelte';
 
   const f = $derived(modal.formSession);
-  const isFalesia = $derived(f?.disciplina === 'falesia');
-  const availableDiscs = $derived(isFalesia ? ['falesia'] : DISCIPLINES.filter(d => d !== 'falesia'));
+  const availableDiscs = $derived(DISCIPLINES);
 
   let busy = $state(false);
 
@@ -32,12 +31,18 @@
       <form onsubmit={onSubmit}>
         <div class="discipline-toggle">
           {#each availableDiscs as d}
-            <button type="button" class="disc-btn {f.disciplina === d ? 'on' : ''}" onclick={() => f.disciplina = d}>{DISCIPLINE_LABELS[d]}</button>
+            {@const added = (f.discipline || []).includes(d)}
+            <button type="button" class="disc-btn {added ? 'on' : ''} {modal.activeDiscipline === d ? 'active' : ''}" onclick={() => addDiscipline(d)}>
+              {DISCIPLINE_LABELS[d]}
+              {#if added && f.discipline.length > 1}
+                <span class="disc-remove" role="button" tabindex="0" onclick={(e) => { e.stopPropagation(); removeDiscipline(d); }} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); removeDiscipline(d); } }} title="Rimuovi {DISCIPLINE_LABELS[d]} da questa sessione">×</span>
+              {/if}
+            </button>
           {/each}
         </div>
 
         <div class="field-row">
-          <div class="field"><label>Data</label><input type="date" bind:value={f.data}></div>
+          <SessionDatePicker bind:value={f.data} />
         </div>
         <div class="field-row">
           <CragPicker session={f} />
@@ -54,11 +59,9 @@
         <div class="field"><label>Note sessione</label><textarea rows="2" bind:value={f.note}></textarea></div>
 
         <fieldset>
-          <legend>{DISCIPLINE_LABELS[f.disciplina]}</legend>
-          <DisciplineFields session={f} />
+          <legend>{DISCIPLINE_LABELS[modal.activeDiscipline]}</legend>
+          <DisciplineFields session={f} discipline={modal.activeDiscipline} />
         </fieldset>
-
-        <SensazioniPanel session={f} />
 
         <div class="modal-actions">
           <div>{#if f.id}<button type="button" class="btn btn-danger" onclick={() => requestDelete(f.id)}>Elimina</button>{/if}</div>

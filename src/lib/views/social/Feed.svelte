@@ -1,10 +1,11 @@
 <script>
   import { app } from '../../stores/appState.svelte.js';
+  import { sessionDisciplines } from '../../utils/grades.js';
   import { DISCIPLINES, DISCIPLINE_LABELS } from '../../constants.js';
   import FeedItem from './FeedItem.svelte';
 
   const filtered = $derived((app.friendFeed || []).filter(r =>
-    (app.feedFilterDiscipline === 'all' || r.disciplina === app.feedFilterDiscipline) &&
+    (app.feedFilterDiscipline === 'all' || sessionDisciplines(r).includes(app.feedFilterDiscipline)) &&
     (app.feedFilterFriend === 'all' || r.authorId === app.feedFilterFriend)
   ));
   const visible = $derived(app.feedVisibleCount || 8);

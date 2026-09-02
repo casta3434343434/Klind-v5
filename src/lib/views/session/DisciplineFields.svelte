@@ -5,19 +5,24 @@
   } from '../../constants.js';
   import { getScale, kingToFont, displayGrade } from '../../utils/grades.js';
 
-  let { session } = $props();
+  let { session, discipline } = $props();
 
-  const disc = $derived(session.disciplina);
+  const disc = $derived(discipline || session.disciplina);
+  const climbs = $derived(session.blocchiByDiscipline?.[disc] || []);
   const isBoulder = $derived(disc === 'boulder');
   const isLead = $derived(disc === 'lead');
   const isMoon = $derived(disc === 'moonboard');
   const isSpeed = $derived(disc === 'speed');
   const isCircuiti = $derived(disc === 'circuiti');
-  const isFalesia = $derived(disc === 'falesia');
-  const wallDisc = $derived(isBoulder || isLead || isMoon || isCircuiti || isFalesia);
+  const wallDisc = $derived(isBoulder || isLead || isMoon || isCircuiti);
 
-  const sessionScale = $derived(session.scala || 'font');
-  const scaleOptions = $derived((isLead || isCircuiti || isFalesia) ? LEAD_SCALES : BOULDER_SCALES);
+  // Scala gradi e cadute sono per-disciplina (una sessione può avere più
+  // discipline insieme: boulder e lead non devono condividere lo stesso
+  // valore, altrimenti si sovrascrivono a vicenda).
+  session.scalaByDiscipline ||= {};
+  session.cadutebyDiscipline ||= {};
+  const sessionScale = $derived(session.scalaByDiscipline[disc] || 'font');
+  const scaleOptions = $derived((isLead || isCircuiti) ? LEAD_SCALES : BOULDER_SCALES);
   const sc = $derived(getScale(disc));
 
   function moonGradeOptions() {
@@ -39,8 +44,14 @@
   let draft = $state(blankDraft());
   let editingIndex = $state(null);
 
+  $effect(() => {
+    void disc;
+    draft = blankDraft();
+    editingIndex = null;
+  });
+
   function editClimb(i) {
-    const c = session.blocchi[i];
+    const c = climbs[i];
     draft = {
       ...blankDraft(),
       ...c,
@@ -51,7 +62,7 @@
   }
 
   function removeClimb(i) {
-    session.blocchi.splice(i, 1);
+    climbs.splice(i, 1);
     if (editingIndex === i) { editingIndex = null; draft = blankDraft(); }
   }
 
@@ -76,7 +87,7 @@
     if (isSpeed) {
       if (!draft.nome && !draft.tempo) return;
       const climb = { nome: draft.nome, tempo: draft.tempo, esito: draft.esito, percorso: draft.percorso, notaBlocco: draft.notaBlocco };
-      if (editingIndex === null) session.blocchi.push(climb); else session.blocchi[editingIndex] = climb;
+      if (editingIndex === null) climbs.push(climb); else climbs[editingIndex] = climb;
     } else {
       if (!draft.nome && !effectiveGrade && !draft.gradoSetter && !foto.length) return;
       const climb = {
@@ -86,7 +97,7 @@
         lunghezza: draft.lunghezza, settore: draft.settore, stelle: draft.stelle, angolo: draft.angolo,
         presa: draft.presa, nota: draft.notaBlocco, foto
       };
-      if (editingIndex === null) session.blocchi.push(climb); else session.blocchi[editingIndex] = climb;
+      if (editingIndex === null) climbs.push(climb); else climbs[editingIndex] = climb;
     }
     draft = blankDraft();
     editingIndex = null;
@@ -94,7 +105,7 @@
 
   const dominantPresa = $derived.by(() => {
     const counts = {};
-    (session.blocchi || []).forEach(p => { if (p.presa) counts[p.presa] = (counts[p.presa] || 0) + 1; });
+    climbs.forEach(p => { if (p.presa) counts[p.presa] = (counts[p.presa] || 0) + 1; });
     const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     return entries.length ? entries[0][0] : '';
   });
@@ -122,10 +133,10 @@
   }
 </script>
 
-{#if session.blocchi?.length}
+{#if climbs.length}
   {#if dominantPresa}<div class="sub" style="margin-bottom:8px;">Presa prevalente sessione: <b>{dominantPresa}</b></div>{/if}
   <div class="climb-list">
-    {#each session.blocchi as p, i}
+    {#each climbs as p, i}
       <div class="climb-item">
         <div class="climb-item-main">
           <b>{p.nome || (isSpeed ? `Tentativo ${i + 1}` : '(senza nome)')}</b>
@@ -170,7 +181,7 @@
 {:else}
   {#if wallDisc && !isMoon}
     <div class="field"><label>Scala gradi</label>
-      <select bind:value={session.scala}>
+      <select bind:value={session.scalaByDiscipline[disc]}>
         {#each scaleOptions as opt}<option value={opt.id}>{opt.label}</option>{/each}
       </select>
     </div>
@@ -217,7 +228,7 @@
     <div class="field"><label>Tipo</label>
       <select bind:value={draft.tipo}>
         <option value=""></option>
-        {#each (isLead || isFalesia) ? LEAD_STYLES : (isMoon || isBoulder) ? MOON_TIPI : [] as t}<option value={t}>{t}</option>{/each}
+        {#each isLead ? LEAD_STYLES : (isMoon || isBoulder) ? MOON_TIPI : [] as t}<option value={t}>{t}</option>{/each}
       </select>
     </div>
   {/if}
@@ -235,24 +246,14 @@
       {/if}
     </div>
   {/if}
-  {#if isLead || isFalesia}
+  {#if isLead}
     <div class="field-row">
       <div class="field"><label>Modalità di salita</label>
         <select bind:value={draft.modalita}>
           {#each LEAD_ASCENT_MODES as mode}<option value={mode.id}>{mode.label}</option>{/each}
         </select>
       </div>
-      <div class="field"><label>Cadute</label><input type="number" bind:value={session.cadute}></div>
-    </div>
-  {/if}
-  {#if isFalesia}
-    <div class="field"><label>Lunghezza via (m)</label><input type="number" bind:value={draft.lunghezza}></div>
-    <div class="field"><label>Settore (facoltativo)</label><input type="text" placeholder="es. Edera" bind:value={draft.settore}></div>
-    <div class="field"><label>Qualità via</label>
-      <div class="star-picker">
-        {#each [1, 2, 3, 4, 5] as n}<button type="button" class="star-btn {(draft.stelle || 0) >= n ? 'on' : ''}" onclick={() => draft.stelle = n}>★</button>{/each}
-        {#if draft.stelle}<button type="button" class="star-clear" onclick={() => draft.stelle = 0}>✕</button>{/if}
-      </div>
+      <div class="field"><label>Cadute</label><input type="number" bind:value={session.cadutebyDiscipline[disc]}></div>
     </div>
   {/if}
   {#if wallDisc}
@@ -268,14 +269,12 @@
           {/if}
         </select>
       </div>
-      {#if !isFalesia}
-        <div class="field"><label>Presa prevalente</label>
+      <div class="field"><label>Presa prevalente</label>
           <select bind:value={draft.presa}>
             <option value=""></option>
             {#each GRIP_TYPES as g}<option>{g}</option>{/each}
           </select>
-        </div>
-      {/if}
+      </div>
     </div>
   {/if}
   <div class="field"><label>Nota</label><input type="text" bind:value={draft.notaBlocco}></div>
@@ -295,5 +294,5 @@
     </div>
   {/if}
 
-  <button type="button" class="btn btn-sm" onclick={addOrSaveClimb}>{editingIndex === null ? '+ Aggiungi' : 'Salva'} {isBoulder ? 'blocco' : (isLead || isFalesia) ? 'via' : 'problema'}</button>
+  <button type="button" class="btn btn-sm" onclick={addOrSaveClimb}>{editingIndex === null ? '+ Aggiungi' : 'Salva'} {isBoulder ? 'blocco' : isLead ? 'via' : 'problema'}</button>
 {/if}

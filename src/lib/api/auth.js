@@ -3,7 +3,6 @@ import { app } from '../stores/appState.svelte.js';
 import { fetchProfile } from './profile.js';
 import { fetchSessions } from './sessions.js';
 import { loadCrags } from './crags.js';
-import { fetchWellness } from './wellness.js';
 import { fetchTests } from './tests.js';
 import { loadFriendsData } from './friends.js';
 import { loadGroups } from './groups.js';
@@ -13,16 +12,14 @@ import { loadNotifications, subscribeNotifications, unsubscribeNotifications } f
 export async function loadAllUserData(userId) {
   app.loadingUserData = true;
   try {
-    const [profile, sessions, wellness, tests] = await Promise.all([
+    const [profile, sessions, tests] = await Promise.all([
       fetchProfile(userId),
       fetchSessions(userId),
-      fetchWellness(userId),
       fetchTests(userId),
       loadCrags()
     ]);
     app.profile = profile || {};
     app.sessions = sessions;
-    app.wellness = wellness;
     app.tests = tests;
     app.user = profile?.username || app.authUser?.email || '';
     // Dati sociali: non bloccano il primo render se falliscono/impiegano tempo.
@@ -91,7 +88,6 @@ export async function logout() {
   app.user = null;
   app.profile = null;
   app.sessions = [];
-  app.wellness = [];
   app.tests = [];
   app.friends = [];
   app.friendRequests = [];

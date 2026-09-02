@@ -1,5 +1,6 @@
 <script>
   import { DISCIPLINE_LABELS } from '../../constants.js';
+  import { sessionDisciplines } from '../../utils/grades.js';
   import { app } from '../../stores/appState.svelte.js';
   import { modal, cancelDelete, confirmDelete } from '../../stores/sessionModal.svelte.js';
 
@@ -11,7 +12,7 @@
     <div class="modal delete-confirm" onclick={(e) => e.stopPropagation()}>
       <div class="delete-mark">!</div>
       <h3>Eliminare questa sessione?</h3>
-      <p>{session ? `${DISCIPLINE_LABELS[session.disciplina] || 'Sessione'} del ${session.data.split('-').reverse().join('/')}` : 'Questa sessione'} verrà rimossa definitivamente dai tuoi progressi.</p>
+      <p>{session ? `${sessionDisciplines(session).map(disc => DISCIPLINE_LABELS[disc]).join(' + ') || 'Sessione'} del ${session.data.split('-').reverse().join('/')}` : 'Questa sessione'} verrà rimossa definitivamente dai tuoi progressi.</p>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick={cancelDelete}>Annulla</button>
         <button type="button" class="btn btn-danger" onclick={confirmDelete}>Elimina sessione</button>

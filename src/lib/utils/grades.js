@@ -1,6 +1,19 @@
 import { BOULDER_SCALE, ROUTE_SCALE, KING_ROCK, FONT_TO_KING, KING_TO_FONT } from '../constants.js';
+
+// Elenco (senza duplicati) delle discipline presenti in una sessione. NON
+// filtriamo su DISCIPLINES: una vecchia sessione falesia deve continuare a
+// mostrare correttamente il proprio chip anche ora che falesia non è più
+// selezionabile per le sessioni nuove.
+export function sessionDisciplines(session) {
+  const values = session?.discipline || session?.disciplines || (session?.disciplina ? [session.disciplina] : []);
+  return [...new Set(values)];
+}
+
+export function sessionClimbs(session, disc) {
+  return session?.blocchiByDiscipline?.[disc] || (session?.disciplina === disc ? session?.blocchi || [] : []);
+}
 export function getScale(disc) {
-  if (disc === 'lead' || disc === 'circuiti' || disc === 'falesia') return ROUTE_SCALE;
+  if (disc === 'lead' || disc === 'circuiti') return ROUTE_SCALE;
   return BOULDER_SCALE;
 }
 
@@ -22,7 +35,7 @@ export function sessionGrade(s, disc) {
   const scale = getScale(disc);
   const canonical = grade => disc === 'boulder' && ['4', '5'].includes(grade) ? KING_TO_FONT[grade] : grade;
   const direct = canonical(s[disc]?.grado || '');
-  const grades = [direct, ...(s.blocchi || []).map(item => canonical(item.grado || ''))].filter(Boolean);
+  const grades = [direct, ...sessionClimbs(s, disc).map(item => canonical(item.gradoUser || item.grado || ''))].filter(Boolean);
   return grades.reduce((best, grade) => gradeIndex(scale, grade) > gradeIndex(scale, best) ? grade : best, '');
 }
 
@@ -30,7 +43,7 @@ export function bestGrade(disc, sessions) {
   let best = null;
   let bestIdx = -1;
   const sc = getScale(disc);
-  sessions.filter(s => s.disciplina === disc).forEach(s => {
+  sessions.filter(s => sessionDisciplines(s).includes(disc)).forEach(s => {
     const g = sessionGrade(s, disc);
     if (g) {
       const idx = gradeIndex(sc, g);
@@ -82,8 +95,8 @@ export function displayGrade(disc, grade, scale, profileScale) {
   return map ? map(grade) : grade;
 }
 
-export function displaySessionGrade(session, grade, profileScale) {
-  return displayGrade(session.disciplina, grade, session.disciplina === 'boulder' ? 'king' : session.scala, profileScale);
+export function displaySessionGrade(session, grade, profileScale, disc = session.disciplina) {
+  return displayGrade(disc, grade, disc === 'boulder' ? 'king' : session.scalaByDiscipline?.[disc], profileScale);
 }
 
 // Converte qualunque grado, di qualunque disciplina/scala, in un indice sulla
@@ -91,11 +104,11 @@ export function displaySessionGrade(session, grade, profileScale) {
 // confrontare discipline diverse sullo stesso asse.
 export function normalizedGradeValue(disc, grade) {
   if (!grade) return null;
-  const frenchGrade = disc === 'lead'
-    ? displayGrade('lead', grade, 'french').toLowerCase()
-    : disc === 'speed' && ROUTE_SCALE.includes(grade.toLowerCase())
-      ? grade.toLowerCase()
-      : displayGrade(disc === 'speed' ? 'boulder' : disc, grade, 'french').toLowerCase();
+  const raw = String(grade).trim();
+  const normalizedRaw = raw.toLowerCase();
+  const frenchGrade = ROUTE_SCALE.includes(normalizedRaw)
+    ? normalizedRaw
+    : displayGrade(disc === 'speed' ? 'boulder' : disc, raw, 'french').toLowerCase();
   const index = ROUTE_SCALE.indexOf(frenchGrade);
   return index < 0 ? null : index;
 }

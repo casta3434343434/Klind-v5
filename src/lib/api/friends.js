@@ -34,7 +34,8 @@ export async function loadFriendsData() {
 
 export async function searchUserByUsername(username) {
   const me = app.authUser.id;
-  const { data, error } = await sb.from('profiles').select('id,username,is_developer').ilike('username', username).neq('id', me).limit(5);
+  const escaped = username.trim().replace(/[\\%_]/g, '\\$&');
+  const { data, error } = await sb.from('profiles').select('id,username,is_developer').ilike('username', `%${escaped}%`).neq('id', me).limit(5);
   if (error) { console.error(error); return []; }
   return data;
 }

@@ -2,7 +2,7 @@
   import { app } from '../stores/appState.svelte.js';
   import { DOW, MONTHS, DISCIPLINE_LABELS } from '../constants.js';
   import { today, fmt, parseDate } from '../utils/dates.js';
-  import { sessionGrade, displaySessionGrade } from '../utils/grades.js';
+  import { sessionDisciplines, sessionGrade, displaySessionGrade } from '../utils/grades.js';
   import { openNewSession, openEditSession } from '../stores/sessionModal.svelte.js';
 
   let calMonth = $state(new Date());
@@ -42,6 +42,19 @@
     dayPanel = dayPanel === ds ? null : ds;
   }
 
+  function dayDisciplines(sessions) {
+    return [...new Set(sessions.flatMap(session => sessionDisciplines(session)))];
+  }
+
+  function dayBackground(disciplines) {
+    if (disciplines.length < 2) return '';
+    const colors = disciplines.map(disc => `color-mix(in srgb, var(--${disc === 'lead' ? 'vertical' : disc === 'moonboard' ? 'moon' : disc}) 24%, transparent)`);
+    if (colors.length === 2) return `linear-gradient(135deg, ${colors[0]} 0 50%, ${colors[1]} 50% 100%)`;
+    const step = 100 / colors.length;
+    const stops = colors.map((color, index) => `${color} ${index * step}% ${(index + 1) * step}%`).join(', ');
+    return `conic-gradient(from -45deg, ${stops})`;
+  }
+
   const dayList = $derived(dayPanel ? (app.sessions.filter(s => s.data === dayPanel)) : []);
 </script>
 
@@ -64,9 +77,11 @@
       {:else}
         {@const ds = cellDate(d)}
         {@const sess = byDate[ds] || []}
-        {@const disc = sess[0]?.disciplina}
+        {@const disciplines = dayDisciplines(sess)}
+        {@const disc = disciplines[0]}
         <div
-          class="cal-cell {ds === todayS ? 'today' : ''} {disc ? `has-session-${disc}` : ''} {ds === dayPanel ? 'selected-day' : ''}"
+          class="cal-cell {ds === todayS ? 'today' : ''} {disc ? `has-session-${disc}` : ''} {disciplines.length > 1 ? 'has-multi-session' : ''} {ds === dayPanel ? 'selected-day' : ''}"
+          style={dayBackground(disciplines) ? `background:${dayBackground(disciplines)};` : undefined}
           onclick={() => openDay(ds)}
         >
           <div class="d">{d}</div>
@@ -75,11 +90,13 @@
       {/if}
     {/each}
   </div>
-  <div style="display:flex; gap:15px; margin-top:12px; font-size:15px; color:var(--muted);">
+  <div class="calendar-legend">
     <span><span class="legend-dot" style="background:var(--boulder);"></span>Boulder</span>
     <span><span class="legend-dot" style="background:var(--vertical);"></span>Vertical</span>
     <span><span class="legend-dot" style="background:var(--moon);"></span>Moonboard</span>
     <span><span class="legend-dot" style="background:var(--speed);"></span>Speed</span>
+    <span><span class="legend-dot" style="background:var(--circuiti);"></span>Circuiti</span>
+    <span><span class="legend-dot" style="background:var(--falesia);"></span>Falesia</span>
   </div>
 </div>
 
@@ -94,11 +111,9 @@
     </div>
     {#if dayList.length}
       {#each dayList as r}
-        {@const grade = sessionGrade(r, r.disciplina)}
         <div class="session-mini" onclick={() => openEditSession(r)} style="cursor:pointer;">
           <div>
-            <span class="chip chip-{r.disciplina}">{DISCIPLINE_LABELS[r.disciplina]}</span>
-            {grade ? displaySessionGrade(r, grade) : ''}
+            {#each sessionDisciplines(r) as disc}<span class="chip chip-{disc}">{DISCIPLINE_LABELS[disc]}</span> {#if sessionGrade(r, disc)}<b>{displaySessionGrade(r, sessionGrade(r, disc), undefined, disc)}</b> {/if}{/each}
             {#if r.luogo}· {r.luogo}{/if}
           </div>
           <div>{r.durata || '—'} min</div>

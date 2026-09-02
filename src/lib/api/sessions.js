@@ -1,8 +1,25 @@
 import { sb } from './supabaseClient.js';
 import { app } from '../stores/appState.svelte.js';
+import { sessionDisciplines } from '../utils/grades.js';
 
 export function rowToSession(row) {
-  return { ...row.payload, id: row.id, data: row.data, disciplina: row.disciplina, privacy: row.privacy };
+  const session = { ...row.payload, id: row.id, data: row.data, disciplina: row.disciplina, privacy: row.privacy };
+  session.discipline = sessionDisciplines(session).length ? sessionDisciplines(session) : [row.disciplina];
+  session.blocchiByDiscipline ||= row.disciplina ? { [row.disciplina]: session.blocchi || [] } : {};
+
+  // Compatibilità con le sessioni salvate prima che scala/cadute diventassero
+  // per-disciplina: le portiamo nelle nuove mappe già in lettura, non solo
+  // quando l'utente riapre la sessione per modificarla — altrimenti Storico,
+  // Calendario e Feed mostrerebbero la scala di default invece di quella
+  // che l'utente aveva davvero scelto.
+  session.scalaByDiscipline ||= {};
+  if (session.scala && !session.scalaByDiscipline[row.disciplina]) session.scalaByDiscipline[row.disciplina] = session.scala;
+  session.cadutebyDiscipline ||= {};
+  if (session.cadute != null && session.cadute !== '' && row.disciplina === 'lead' && session.cadutebyDiscipline.lead == null) {
+    session.cadutebyDiscipline.lead = session.cadute;
+  }
+
+  return session;
 }
 
 export async function fetchSessions(userId) {
@@ -12,7 +29,8 @@ export async function fetchSessions(userId) {
 }
 
 export async function upsertSession(session) {
-  const row = { user_id: app.authUser.id, data: session.data, disciplina: session.disciplina, privacy: session.privacy || 'amici', payload: session };
+  const primary = session.discipline?.[0] || session.disciplina;
+  const row = { user_id: app.authUser.id, data: session.data, disciplina: primary, privacy: session.privacy || 'amici', payload: { ...session, disciplina: primary } };
   if (session.id) {
     const { data, error } = await sb.from('sessions').update(row).eq('id', session.id).select().single();
     if (error) { alert('Errore salvataggio: ' + error.message); return null; }

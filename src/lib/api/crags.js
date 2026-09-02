@@ -8,7 +8,7 @@ export async function loadCrags() {
 }
 
 export async function addCrag(nome, tipo, indirizzo, zona) {
-  const row = { nome: nome.trim(), tipo: tipo || 'falesia', indirizzo: (indirizzo || '').trim() || null, zona: (zona || '').trim() || null, created_by: app.authUser.id };
+  const row = { nome: nome.trim(), tipo: tipo || 'palestra', indirizzo: (indirizzo || '').trim() || null, zona: (zona || '').trim() || null, created_by: app.authUser.id };
   const { data, error } = await sb.from('crags').insert(row).select().single();
   if (error) {
     if (error.code === '23505') {
@@ -24,7 +24,7 @@ export async function addCrag(nome, tipo, indirizzo, zona) {
 }
 
 export async function updateCragDetails(id, fields) {
-  if (!app.profile?.can_edit_crags) { alert('Solo gli utenti verificati possono modificare le falesie.'); return null; }
+  if (!app.profile?.can_edit_crags) { alert('Solo gli utenti verificati possono modificare le palestre.'); return null; }
   const { data, error } = await sb.from('crags').update(fields).eq('id', id).select().single();
   if (error) { alert('Errore salvataggio: ' + error.message); return null; }
   const idx = app.crags.findIndex(c => c.id === id);
@@ -33,9 +33,9 @@ export async function updateCragDetails(id, fields) {
 }
 
 export async function deleteCrag(id) {
-  if (!app.profile?.can_edit_crags) { alert('Solo gli utenti verificati possono eliminare le falesie.'); return false; }
+  if (!app.profile?.can_edit_crags) { alert('Solo gli utenti verificati possono eliminare le palestre.'); return false; }
   const crag = app.crags.find(c => c.id === id);
-  if (!crag || !confirm(`Eliminare la falesia "${crag.nome}"? Le sessioni già registrate resteranno nello storico.`)) return false;
+  if (!crag || !confirm(`Eliminare la palestra "${crag.nome}"? Le sessioni già registrate resteranno nello storico.`)) return false;
   const { error } = await sb.from('crags').delete().eq('id', id);
   if (error) { alert('Errore eliminazione: ' + error.message); return false; }
   app.crags = app.crags.filter(c => c.id !== id);

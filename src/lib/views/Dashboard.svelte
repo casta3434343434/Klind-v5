@@ -2,7 +2,7 @@
   import { app } from '../stores/appState.svelte.js';
   import { DISCIPLINES, DISCIPLINE_LABELS, SESSION_MOODS } from '../constants.js';
   import { today, parseDate, localDateKey, startOfWeek } from '../utils/dates.js';
-  import { bestGrade, displayGrade } from '../utils/grades.js';
+  import { bestGrade, displayGrade, sessionDisciplines } from '../utils/grades.js';
   import { openNewSession } from '../stores/sessionModal.svelte.js';
 
   let homePeriod = $state('all'); // 'all' | 'week'
@@ -40,9 +40,6 @@
   const streak = $derived(computeStreak(app.sessions));
   const bestByDisc = $derived(DISCIPLINES.map(disc => ({ disc, grade: bestGrade(disc, homeSessions) })));
 
-  const injury = $derived([...app.sessions]
-    .filter(s => (new Date() - parseDate(s.data)) / 86400000 <= 14 && s.infortunio?.gravita === 'Infortunio - stop')
-    .sort((a, b) => b.data.localeCompare(a.data))[0]);
 </script>
 
 <div class="main-header">
@@ -62,12 +59,6 @@
   <button class="btn btn-primary" onclick={() => openNewSession('boulder')}>+ Registra sessione</button>
 </div>
 
-{#if injury}
-  <div class="panel" style="border-color:var(--rust);background:rgba(232,96,47,0.08);">
-    <b style="color:var(--rust);">Attenzione</b> — hai segnalato un infortunio il {injury.data.split('-').reverse().join('/')}. Valuta carico ridotto.
-  </div>
-{/if}
-
 <div class="cards-row" style="grid-template-columns:repeat(4,1fr);">
   <div class="stat-card">
     <div class="k">{homePeriod === 'week' ? 'Obbiettivo settimanale' : 'Sessioni nel periodo'}</div>
@@ -75,7 +66,7 @@
   </div>
   <div class="stat-card">
     <div class="k">Ore totali</div>
-    <div class="v">{totalHours ? totalHours.toFixed(1) : '—'}{#if totalHours}<small> h</small>{/if}</div>
+    <div class="v">{totalHours ? totalHours.toFixed(1) : '—'}{#if totalHours}{' '}<small>h</small>{/if}</div>
   </div>
   <div class="stat-card">
     <div class="k">Ultima sessione</div>
@@ -88,7 +79,7 @@
   </div>
   <div class="stat-card">
     <div class="k">Streak attuale</div>
-    <div class="v">{streak.current}<small> {streak.current === 1 ? 'giorno' : 'giorni'}</small></div>
+    <div class="v">{streak.current}{' '}<small>{streak.current === 1 ? 'giorno' : 'giorni'}</small></div>
     {#if streak.best >= 7}
       <div class="sub" style="margin-top:4px;">Costanza: {streak.best >= 30 ? '30+' : '7+'} giorni di fila <span style="color:var(--muted);">(record: {streak.best})</span></div>
     {/if}
@@ -110,7 +101,7 @@
     {#each recentSessions as r}
       <div class="session-mini">
         <div>
-          <span class="chip chip-{r.disciplina}">{DISCIPLINE_LABELS[r.disciplina]}</span>
+          {#each sessionDisciplines(r) as disc}<span class="chip chip-{disc}">{DISCIPLINE_LABELS[disc]}</span>{/each}
           {r.data.split('-').reverse().join('/')}
         </div>
         <div>{r.luogo || ''}</div>

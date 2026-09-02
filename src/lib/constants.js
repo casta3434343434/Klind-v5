@@ -43,7 +43,11 @@ export const LEAD_SCALES = [
   {id:'v', label:'V-scale (V3, V8)'}
 ];
 
-export const DISCIPLINES = ['boulder','lead','moonboard','speed','circuiti','falesia'];
+export const DISCIPLINES = ['boulder','lead','moonboard','speed','circuiti'];
+// 'falesia' non è più selezionabile per nuove sessioni (non è in DISCIPLINES,
+// quindi non compare in nessun selettore), ma resta qui SOLO per mostrare
+// correttamente l'etichetta sulle vecchie sessioni già salvate con quella
+// disciplina — altrimenti il loro chip apparirebbe vuoto/"undefined".
 export const DISCIPLINE_LABELS = {boulder:'Boulder',lead:'Vertical',moonboard:'Moonboard',speed:'Speed',circuiti:'Circuiti',falesia:'Falesia'};
 export const LEAD_ASCENT_MODES = [{id:'primo',label:'Da primo'},{id:'secondo',label:'Da secondo'},{id:'autodelay',label:"Autodelay (sicura dall'alto)"}];
 export const DOW = ['Lu','Ma','Me','Gi','Ve','Sa','Do'];
@@ -58,7 +62,6 @@ export const SUPPLEMENTARY = ['Hangboard/travetto','Campus board','ARC','4x4/cir
 export const DITA_PROTOCOLS = ['Max hang 7s','Repeaters 7/3','Minimum edge','Continuous hang','Trazione assistita','Altro'];
 export const DITA_PRESE = ['Mezzo crimp','Crimp aperto','Open hand','Pinza','Tacca/pocket'];
 export const BODY_PARTS = ['','Dita A2','Dita A4','Dita altro','Polso','Gomito','Spalla','Schiena','Ginocchio','Caviglia','Pelle','Altro'];
-export const INJURY_LEVELS = ['','Fastidio lieve','Dolore moderato','Infortunio - stop'];
 export const TEST_TYPES = ['maxhang20','maxhangbw','pullup','pullupweighted','critforce','campus','other'];
 export const TEST_LABELS = {maxhang20:'Max hang 20mm',maxhangbw:'Max hang % peso',pullup:'Trazioni max',pullupweighted:'Trazione zavorrata',critforce:'Critical Force',campus:'Campus reach',other:'Altro'};
 export const TEST_UNITS = {maxhang20:'kg',maxhangbw:'%',pullup:'reps',pullupweighted:'kg',critforce:'kg',campus:'gradini',other:''};
@@ -82,25 +85,25 @@ export const DEVELOPER_USER_ID = 'ab710c04-f587-4a1d-b5a3-817ade473b20';
 
 export const I18N = {
   it: {
-    nav_home:'Home', nav_calendar:'Calendario', nav_progress:'Progressi', nav_tests:'Test', nav_wellness:'Benessere',
-    nav_falesie:'Falesia', nav_crags_admin:'Database luoghi', nav_bugs:'Segnala bug', nav_profile:'Profilo',
+    nav_home:'Home', nav_calendar:'Calendario', nav_progress:'Progressi', nav_tests:'Test',
+    nav_crags_admin:'Database luoghi', nav_bugs:'Segnala bug', nav_profile:'Profilo',
     nav_social:'Social', nav_history:'Storico',
     title_home:'Ciao', title_calendar:'Calendario', title_progress:'Progressi', title_tests:'Test',
-    title_wellness:'Benessere', title_falesie:'Falesia', title_crags_admin:'Database luoghi',
+    title_crags_admin:'Database luoghi',
     title_bugs:'Segnala un bug', title_profile:'Profilo', title_social:'Profilo & Social', title_history:'Storico',
     btn_save:'Salva', btn_cancel:'Annulla', btn_delete:'Elimina', btn_edit:'Modifica', btn_close:'Chiudi',
-    btn_new_session:'+ Registra sessione', btn_new_falesia:'+ Nuova sessione falesia',
+    btn_new_session:'+ Registra sessione',
     lang_label:'Lingua'
   },
   en: {
-    nav_home:'Home', nav_calendar:'Calendar', nav_progress:'Progress', nav_tests:'Tests', nav_wellness:'Wellness',
-    nav_falesie:'Crag', nav_crags_admin:'Places database', nav_bugs:'Report a bug', nav_profile:'Profile',
+    nav_home:'Home', nav_calendar:'Calendar', nav_progress:'Progress', nav_tests:'Tests',
+    nav_crags_admin:'Places database', nav_bugs:'Report a bug', nav_profile:'Profile',
     nav_social:'Social', nav_history:'History',
     title_home:'Hi', title_calendar:'Calendar', title_progress:'Progress', title_tests:'Tests',
-    title_wellness:'Wellness', title_falesie:'Crag', title_crags_admin:'Places database',
+    title_crags_admin:'Places database',
     title_bugs:'Report a bug', title_profile:'Profile', title_social:'Profile & Social', title_history:'History',
     btn_save:'Save', btn_cancel:'Cancel', btn_delete:'Delete', btn_edit:'Edit', btn_close:'Close',
-    btn_new_session:'+ Log session', btn_new_falesia:'+ New crag session',
+    btn_new_session:'+ Log session',
     lang_label:'Language'
   }
 };

@@ -4,7 +4,8 @@ export function chartTheme() {
   return {
     text: color('--chalk'), muted: color('--muted'), grid: color('--line'), accent: color('--lime'),
     rust: color('--rust'), boulder: color('--boulder'), vertical: color('--vertical'),
-    moon: color('--moon'), speed: color('--speed'), surface: color('--surface')
+    moon: color('--moon'), speed: color('--speed'), circuiti: color('--circuiti'), falesia: color('--falesia'),
+    surface: color('--surface')
   };
 }
 
