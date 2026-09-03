@@ -7,17 +7,13 @@ export function rowToSession(row) {
   session.discipline = sessionDisciplines(session).length ? sessionDisciplines(session) : [row.disciplina];
   session.blocchiByDiscipline ||= row.disciplina ? { [row.disciplina]: session.blocchi || [] } : {};
 
-  // Compatibilità con le sessioni salvate prima che scala/cadute diventassero
-  // per-disciplina: le portiamo nelle nuove mappe già in lettura, non solo
+  // Compatibilità con le sessioni salvate prima che la scala gradi diventasse
+  // per-disciplina: la portiamo nella nuova mappa già in lettura, non solo
   // quando l'utente riapre la sessione per modificarla — altrimenti Storico,
   // Calendario e Feed mostrerebbero la scala di default invece di quella
   // che l'utente aveva davvero scelto.
   session.scalaByDiscipline ||= {};
   if (session.scala && !session.scalaByDiscipline[row.disciplina]) session.scalaByDiscipline[row.disciplina] = session.scala;
-  session.cadutebyDiscipline ||= {};
-  if (session.cadute != null && session.cadute !== '' && row.disciplina === 'lead' && session.cadutebyDiscipline.lead == null) {
-    session.cadutebyDiscipline.lead = session.cadute;
-  }
 
   return session;
 }

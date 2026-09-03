@@ -11,10 +11,14 @@
   import Profile from './Profile.svelte';
   import Social from './Social.svelte';
   import NotifBell from './NotifBell.svelte';
+  import CragsAdmin from './crags/CragsAdmin.svelte';
   import SessionModal from './session/SessionModal.svelte';
   import DeleteConfirm from './session/DeleteConfirm.svelte';
 
   const t = (key) => I18N[app.language]?.[key] || I18N.it[key] || key;
+
+  const isVerified = $derived(!!app.profile?.can_edit_crags);
+  const isDeveloper = $derived(app.authUser?.id === DEVELOPER_USER_ID || !!app.profile?.is_developer);
 
   const navs = $derived([
     { id: 'dashboard', label: t('nav_home') },
@@ -23,18 +27,16 @@
     { id: 'tests', label: t('nav_tests') },
     { id: 'profile', label: t('nav_profile') },
     { id: 'social', label: t('nav_social') },
-    { id: 'history', label: t('nav_history') }
+    { id: 'history', label: t('nav_history') },
+    ...(isVerified ? [{ id: 'database', label: 'Database' }] : [])
   ]);
 
-  const IMPLEMENTED = new Set(['dashboard', 'history', 'calendar', 'progress', 'tests', 'profile', 'social']);
+  const IMPLEMENTED = new Set(['dashboard', 'history', 'calendar', 'progress', 'tests', 'profile', 'social', 'database']);
 
   function goView(id) {
     app.appView = id;
     app.mobileMenuOpen = false;
   }
-
-  const isVerified = $derived(!!app.profile?.can_edit_crags);
-  const isDeveloper = $derived(app.authUser?.id === DEVELOPER_USER_ID || !!app.profile?.is_developer);
 
   let themeMode = $state(getThemeMode());
   function onThemeChange(e) {
@@ -103,6 +105,7 @@
       {#if app.appView === 'tests'}<Test />{/if}
       {#if app.appView === 'profile'}<Profile />{/if}
       {#if app.appView === 'social'}<Social />{/if}
+      {#if app.appView === 'database'}<CragsAdmin />{/if}
     {:else}
       <div class="empty-state" style="margin-top:40px;">
         Questa sezione arriva in una fase successiva del porting (vedi PLAN.md) — per ora usa la versione precedente per {navs.find(n => n.id === app.appView)?.label.toLowerCase()}.

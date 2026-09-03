@@ -2,6 +2,7 @@ import { app } from './appState.svelte.js';
 import { today } from '../utils/dates.js';
 import { upsertSession, deleteSessionRemote } from '../api/sessions.js';
 import { addCrag } from '../api/crags.js';
+import { defaultScaleForDiscipline } from '../utils/grades.js';
 
 export const modal = $state({
   showForm: false,
@@ -15,17 +16,17 @@ export function emptySession(date, disc) {
   const d = disc || 'boulder';
   return {
     id: null, data: date || today(), disciplina: d, discipline: [d], luogo: 'King Rock', salvaLuogo: false, luogoNome: '', luogoIndirizzo: '', durata: '', privacy: 'amici',
-    // scala gradi e cadute sono per-disciplina: una sessione può contenere più
-    // discipline insieme (es. boulder + lead) e non devono condividere lo
-    // stesso valore, altrimenti si sovrascrivono a vicenda.
-    scalaByDiscipline: { [d]: app.profile?.scala || 'font' },
-    cadutebyDiscipline: {},
+    // scala gradi è per-disciplina: una sessione può contenere più discipline
+    // insieme (es. boulder + lead) e non devono condividere lo stesso valore,
+    // altrimenti si sovrascrivono a vicenda. Le cadute invece sono per
+    // singolo blocco/via (dentro blocchiByDiscipline), non qui.
+    scalaByDiscipline: { [d]: defaultScaleForDiscipline(d, app.sessions) },
     blocchi: [], blocchiByDiscipline: { [d]: [] },
     boulder: { completati: 0 },
     lead: { vie: 0 },
     moonboard: { layout: '2024', angolo: '40°', grado: '', problemi: 0, benchmark: false },
-    rpe: '', rpeLocale: '', statoMentale: '', riscaldamento: '',
-    note: ''
+    rpe: '', rpeLocale: '', statoMentale: '',
+    note: '', showNote: false
   };
 }
 
@@ -43,15 +44,14 @@ export function openEditSession(session) {
   f.discipline = [...new Set(f.discipline || [f.disciplina])];
   f.blocchiByDiscipline ||= { [f.disciplina]: f.blocchi || [] };
 
-  // Sessioni salvate prima della correzione avevano scala/cadute condivisi
-  // a livello di sessione invece che per disciplina: li portiamo dentro le
-  // nuove mappe così non si perde nulla aprendo una sessione vecchia.
+  // Sessioni salvate prima della correzione avevano la scala condivisa a
+  // livello di sessione invece che per disciplina: la portiamo dentro la
+  // nuova mappa così non si perde nulla aprendo una sessione vecchia.
   f.scalaByDiscipline ||= {};
   if (f.scala && !f.scalaByDiscipline[f.disciplina]) f.scalaByDiscipline[f.disciplina] = f.scala;
-  f.discipline.forEach(d => { f.scalaByDiscipline[d] ||= app.profile?.scala || 'font'; });
+  f.discipline.forEach(d => { f.scalaByDiscipline[d] ||= defaultScaleForDiscipline(d, app.sessions); });
 
-  f.cadutebyDiscipline ||= {};
-  if (f.cadute && f.discipline.includes('lead') && !f.cadutebyDiscipline.lead) f.cadutebyDiscipline.lead = f.cadute;
+  f.showNote = !!f.note;
 
   modal.activeDiscipline = f.discipline[0] || f.disciplina;
   modal.editingClimbIndex = null;
@@ -69,7 +69,7 @@ export function addDiscipline(disc) {
     f.blocchiByDiscipline ||= {};
     f.blocchiByDiscipline[disc] ||= [];
     f.scalaByDiscipline ||= {};
-    f.scalaByDiscipline[disc] ||= app.profile?.scala || 'font';
+    f.scalaByDiscipline[disc] ||= defaultScaleForDiscipline(disc, app.sessions);
   }
   modal.activeDiscipline = disc;
 }
@@ -85,7 +85,6 @@ export function removeDiscipline(disc) {
   f.discipline = (f.discipline || []).filter(d => d !== disc);
   delete f.blocchiByDiscipline?.[disc];
   delete f.scalaByDiscipline?.[disc];
-  delete f.cadutebyDiscipline?.[disc];
   if (modal.activeDiscipline === disc) {
     // torna a mostrare una disciplina con contenuto se ce n'è ancora una,
     // altrimenti semplicemente la prima rimasta (anche vuota) o boulder di default
@@ -129,7 +128,6 @@ export async function submitSession() {
   f.blocchi = f.blocchiByDiscipline?.[f.disciplina] || f.blocchi || [];
   // pulizia: non ci portiamo dietro impostazioni orfane di discipline tolte
   Object.keys(f.scalaByDiscipline || {}).forEach(d => { if (!f.discipline.includes(d)) delete f.scalaByDiscipline[d]; });
-  Object.keys(f.cadutebyDiscipline || {}).forEach(d => { if (!f.discipline.includes(d)) delete f.cadutebyDiscipline[d]; });
   if (f.salvaLuogo) {
     const nome = (f.luogoNome || f.luogo || '').trim();
     if (nome) {

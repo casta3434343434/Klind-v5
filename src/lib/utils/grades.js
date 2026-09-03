@@ -1,4 +1,4 @@
-import { BOULDER_SCALE, ROUTE_SCALE, KING_ROCK, FONT_TO_KING, KING_TO_FONT } from '../constants.js';
+import { BOULDER_SCALE, ROUTE_SCALE, KING_ROCK, FONT_TO_KING, KING_TO_FONT, BOULDER_SCALES, LEAD_SCALES } from '../constants.js';
 
 // Elenco (senza duplicati) delle discipline presenti in una sessione. NON
 // filtriamo su DISCIPLINES: una vecchia sessione falesia deve continuare a
@@ -15,6 +15,25 @@ export function sessionClimbs(session, disc) {
 export function getScale(disc) {
   if (disc === 'lead' || disc === 'circuiti') return ROUTE_SCALE;
   return BOULDER_SCALE;
+}
+
+// Scala predefinita per una disciplina: guarda le sessioni più recenti
+// dell'utente per quella disciplina e riusa l'ultima scala che ha scelto
+// davvero (così se di solito usi Font per il boulder, ti si ripropone Font,
+// non un default fisso uguale per tutti). Se non c'è ancora nessuno storico
+// per quella disciplina, usa la scala "nativa"/internazionale di riferimento
+// (marcata `native:true` nelle costanti — King Rock per il boulder, essendo
+// la scala di palestra usata qui, Francese per lead/circuiti). Il Moonboard
+// non espone la scelta della scala all'utente: resta sempre Font.
+export function defaultScaleForDiscipline(disc, sessions) {
+  if (disc === 'moonboard') return 'font';
+  const recent = (sessions || [])
+    .filter(s => s.discipline?.includes(disc) && s.scalaByDiscipline?.[disc])
+    .sort((a, b) => b.data.localeCompare(a.data));
+  if (recent.length) return recent[0].scalaByDiscipline[disc];
+
+  const options = (disc === 'lead' || disc === 'circuiti') ? LEAD_SCALES : BOULDER_SCALES;
+  return options.find(o => o.native)?.id || options[0]?.id || 'font';
 }
 
 export function gradeIndex(scale, g) {

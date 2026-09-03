@@ -48,15 +48,18 @@
           <CragPicker session={f} />
           <div class="field"><label>Durata (min)</label><input type="number" bind:value={f.durata}></div>
         </div>
-        <div class="field"><label>Riscaldamento (min)</label><input type="number" bind:value={f.riscaldamento}></div>
         <div class="field"><label>Chi può vedere questa sessione</label>
-          <select bind:value={f.privacy}>
-            <option value="privato">Solo io</option>
-            <option value="amici">Amici</option>
-            <option value="pubblico">Pubblico</option>
-          </select>
+          <div class="privacy-toggle">
+            <button type="button" class="disc-btn {f.privacy === 'privato' ? 'on' : ''}" onclick={() => f.privacy = 'privato'}>Solo io</button>
+            <button type="button" class="disc-btn {f.privacy === 'amici' ? 'on' : ''}" onclick={() => f.privacy = 'amici'}>Amici</button>
+            <button type="button" class="disc-btn {f.privacy === 'pubblico' ? 'on' : ''}" onclick={() => f.privacy = 'pubblico'}>Pubblico</button>
+          </div>
         </div>
-        <div class="field"><label>Note sessione</label><textarea rows="2" bind:value={f.note}></textarea></div>
+        {#if f.showNote}
+          <div class="field"><label>Note sessione</label><textarea rows="2" bind:value={f.note}></textarea></div>
+        {:else}
+          <button type="button" class="btn btn-ghost btn-sm" style="margin-bottom:16px;" onclick={() => f.showNote = true}>+ Aggiungi nota alla sessione</button>
+        {/if}
 
         <fieldset>
           <legend>{DISCIPLINE_LABELS[modal.activeDiscipline]}</legend>
