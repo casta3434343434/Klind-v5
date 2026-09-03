@@ -31,10 +31,10 @@
       <form onsubmit={onSubmit}>
         <div class="discipline-toggle">
           {#each availableDiscs as d}
-            {@const added = (f.discipline || []).includes(d)}
+            {@const added = (f.blocchiByDiscipline?.[d] || []).length > 0}
             <button type="button" class="disc-btn {added ? 'on' : ''} {modal.activeDiscipline === d ? 'active' : ''}" onclick={() => addDiscipline(d)}>
               {DISCIPLINE_LABELS[d]}
-              {#if added && f.discipline.length > 1}
+              {#if added}
                 <span class="disc-remove" role="button" tabindex="0" onclick={(e) => { e.stopPropagation(); removeDiscipline(d); }} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); removeDiscipline(d); } }} title="Rimuovi {DISCIPLINE_LABELS[d]} da questa sessione">×</span>
               {/if}
             </button>

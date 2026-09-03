@@ -74,18 +74,24 @@ export function addDiscipline(disc) {
   modal.activeDiscipline = disc;
 }
 
-// Rimuove esplicitamente una disciplina dalla sessione (una sessione deve
-// avere sempre almeno 1 disciplina, quindi l'ultima rimasta non si può togliere).
+// Rimuove esplicitamente una disciplina dalla sessione, insieme a tutti i
+// blocchi/vie che aveva. Il pulsante × compare solo per le discipline che
+// hanno davvero del contenuto (vedi SessionModal.svelte), quindi qui non
+// serve più impedire di svuotarle tutte: una sessione rimasta senza nessun
+// blocco viene comunque gestita da submitSession al momento del salvataggio.
 export function removeDiscipline(disc) {
   const f = modal.formSession;
   if (!f) return;
-  const selected = f.discipline || [f.disciplina];
-  if (selected.length <= 1) return;
-  f.discipline = selected.filter(d => d !== disc);
+  f.discipline = (f.discipline || []).filter(d => d !== disc);
   delete f.blocchiByDiscipline?.[disc];
   delete f.scalaByDiscipline?.[disc];
   delete f.cadutebyDiscipline?.[disc];
-  if (modal.activeDiscipline === disc) modal.activeDiscipline = f.discipline[0];
+  if (modal.activeDiscipline === disc) {
+    // torna a mostrare una disciplina con contenuto se ce n'è ancora una,
+    // altrimenti semplicemente la prima rimasta (anche vuota) o boulder di default
+    const withContent = (f.discipline || []).find(d => (f.blocchiByDiscipline?.[d] || []).length > 0);
+    modal.activeDiscipline = withContent || f.discipline?.[0] || 'boulder';
+  }
 }
 
 export function closeModal() {
