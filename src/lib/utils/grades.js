@@ -50,11 +50,22 @@ export function getKingLabel(id) {
 
 // Grado più alto raggiunto in una singola sessione (considera sia il campo
 // principale della disciplina sia i singoli blocchi/vie registrati).
+// Grado più alto raggiunto in una singola sessione, considerando tutti i
+// blocchi/vie registrati per quella disciplina (per Moonboard conta il
+// grado User se presente, altrimenti il Setter — vedi sessionClimbs).
+//
+// NOTA STORICA (bug corretto il 4/9): qui c'era una funzione "canonical" che
+// ri-applicava KING_TO_FONT ai gradi già convertiti in Font, scambiando per
+// errore i gradi Font "4" e "5" (i due più facili della scala) per ID della
+// scala King — gonfiando enormemente il grado calcolato di qualunque blocco
+// facile (es. un blocco King "1", salvato correttamente come Font "4",
+// veniva riletto come se "4" fosse un ID King, convertito di nuovo e
+// interpretato come un grado molto più difficile). I blocchi in
+// blocchiByDiscipline salvano già il grado in Font puro: non va più
+// riconvertito qui.
 export function sessionGrade(s, disc) {
   const scale = getScale(disc);
-  const canonical = grade => disc === 'boulder' && ['4', '5'].includes(grade) ? KING_TO_FONT[grade] : grade;
-  const direct = canonical(s[disc]?.grado || '');
-  const grades = [direct, ...sessionClimbs(s, disc).map(item => canonical(item.gradoUser || item.grado || ''))].filter(Boolean);
+  const grades = sessionClimbs(s, disc).map(item => item.gradoUser || item.grado || '').filter(Boolean);
   return grades.reduce((best, grade) => gradeIndex(scale, grade) > gradeIndex(scale, best) ? grade : best, '');
 }
 

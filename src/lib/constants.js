@@ -14,8 +14,7 @@ export const KING_ROCK = [
   {id:'1', label:'1', range:'3C - 4A', color:'#5fb8c9'},
   {id:'2', label:'2', range:'4B - 4C', color:'#5fb8c9'},
   {id:'2+', label:'2+', range:'5A - 5B', color:'#7fc7d4'},
-  {id:'3', label:'3', range:'5B+ - 5C', color:'#6fae5a'},
-  {id:'3+', label:'3+', range:'5C+ - 6A', color:'#9fc23f'},
+  {id:'3+', label:'3+', range:'5B+ - 6A', color:'#9fc23f'},
   {id:'4', label:'4', range:'6A+ - 6B', color:'#e7d23f'},
   {id:'4+', label:'4+', range:'6B+ - 6C', color:'#e7d23f'},
   {id:'5', label:'5', range:'6C+ - 7A', color:'#e8942f'},
@@ -25,8 +24,17 @@ export const KING_ROCK = [
   {id:'7', label:'7', range:'≥ 7C+', color:'#2a271c'}
 ];
 
+// Ogni grado King Rock copre più gradi Font (è una scala più "larga"): le due
+// tabelle sotto devono essere l'inversa esatta l'una dell'altra, altrimenti
+// un blocco toccato con un grado King si ri-mostra con un grado King diverso
+// da quello toccato (bug trovato il 4/9: King "3" veniva salvato come Font
+// 6A ma rivisualizzato come "3+", perché le due tabelle non erano coerenti —
+// mancava proprio un grado Font intermedio tra 5+ e 6A per poter distinguere
+// King "3" da "3+", quindi li abbiamo uniti in un solo pulsante "3+").
+// KING_TO_FONT usa sempre il primo grado Font di ciascun intervallo King,
+// così il giro di andata/ritorno è sempre coerente per costruzione.
 export const FONT_TO_KING = { '4':'1', '5':'2', '5+':'2+', '6A':'3+', '6A+':'4', '6B':'4', '6B+':'4+', '6C':'4+', '6C+':'5', '7A':'5', '7A+':'5+', '7B':'5+', '7B+':'6', '7C':'6-', '7C+':'7', '8A':'7', '8A+':'7', '8B':'7', '8B+':'7', '8C':'7', '8C+':'7', '9A':'7' };
-export const KING_TO_FONT = { '1':'4', '2':'5', '2+':'5+', '3':'6A', '3+':'6A+', '4':'6B', '4+':'6C', '5':'7A', '5+':'7B', '6':'7B+', '6-':'7C', '7':'7C+' };
+export const KING_TO_FONT = { '1':'4', '2':'5', '2+':'5+', '3+':'6A', '4':'6A+', '4+':'6B+', '5':'6C+', '5+':'7A+', '6':'7B+', '6-':'7C', '7':'7C+' };
 
 export const BOULDER_SCALES = [
   {id:'font', label:'Font (6A, 7B+)'},
