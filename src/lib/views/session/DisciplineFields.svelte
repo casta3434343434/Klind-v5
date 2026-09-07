@@ -3,7 +3,7 @@
     BOULDER_SCALE, KING_ROCK, BOULDER_SCALES, LEAD_SCALES, LEAD_STYLES, MOON_TIPI,
     LEAD_ASCENT_MODES, WALL_ANGLES, GRIP_TYPES, MOON_LAYOUTS
   } from '../../constants.js';
-  import { getScale, kingToFont, displayGrade } from '../../utils/grades.js';
+  import { getScale, displayGrade } from '../../utils/grades.js';
 
   let { session, discipline } = $props();
 
@@ -32,7 +32,7 @@
   // Elenco dei gradi da mostrare come pulsanti "tap per aggiungere" — stessa
   // lista che prima popolava la tendina, solo mostrata come pulsanti diretti.
   const tapGrades = $derived.by(() => {
-    if (isBoulder && sessionScale === 'king') return KING_ROCK.map(k => ({ value: kingToFont(k.id), label: `${k.label} (${k.range})` }));
+    if (isBoulder && sessionScale === 'king') return KING_ROCK.map(k => ({ value: k.id, label: `${k.label} (${k.range})` }));
     if (isMoon) return moonGradeOptions().map(g => ({ value: g, label: displayGrade('moonboard', g, sessionScale) }));
     return sc.map(g => ({ value: g, label: displayGrade(disc, g, sessionScale) }));
   });
@@ -52,16 +52,21 @@
 
   let draft = $state(blankDraft());
   let editingIndex = $state(null);
+  // Per Circuiti, il numero di prese si imposta una volta prima di toccare il
+  // grado (informazione principale, non più nascosta dentro "Dettagli") e si
+  // applica al blocco che si aggiunge toccando il grado.
+  let quickNumPrese = $state('');
 
   $effect(() => {
     void disc;
     draft = blankDraft();
     editingIndex = null;
+    quickNumPrese = '';
   });
 
   // Tocca un grado → aggiunge subito un blocco, senza aprire nessun form.
   function quickAdd(grade) {
-    const climb = { nome: '', grado: grade, tipo: '', modalita: 'primo', tentativi: '', rest: '', numPrese: '', ripetizioni: '', riposoCircuito: '', angolo: '', presa: '', notaBlocco: '', foto: [] };
+    const climb = { nome: '', grado: grade, tipo: '', modalita: 'primo', tentativi: '', rest: '', numPrese: isCircuiti ? quickNumPrese : '', ripetizioni: '', riposoCircuito: '', angolo: '', presa: '', notaBlocco: '', foto: [] };
     climbs.push(climb);
   }
 
@@ -226,6 +231,9 @@
           {#each scaleOptions as opt}<option value={opt.id}>{opt.label}</option>{/each}
         </select>
       </div>
+      {#if isCircuiti}
+        <div class="field"><label>Numero di prese</label><input type="number" bind:value={quickNumPrese}></div>
+      {/if}
     </div>
   {/if}
 
@@ -275,43 +283,43 @@
         </div>
         {#if editingIndex === i}
           <div class="climb-detail-editor">
-            <div class="field"><label>Nome</label><input type="text" bind:value={draft.nome}></div>
-            <div class="field">
-              <label>Foto (max 3)</label>
-              <div class="file-upload-wrap">
-                <label for="f_foto_{i}" class="file-upload-btn">Scegli file</label>
-                <input type="file" id="f_foto_{i}" accept="image/*" multiple onchange={onPhotoChange}>
-                <span class="file-upload-name">{draft.fotoFiles.length ? (draft.fotoFiles.length === 1 ? draft.fotoFiles[0].name : `${draft.fotoFiles.length} file selezionati`) : (draft.fotoExisting.length ? `${draft.fotoExisting.length} foto esistenti` : 'Nessun file scelto')}</span>
-              </div>
-            </div>
-            <div class="field-row">
-              {#if isMoon}
-                <div class="field"><label>Grado Setter</label>
-                  <select bind:value={draft.gradoSetter}>
-                    <option value="">—</option>
-                    {#each moonGradeOptions() as g}<option value={g}>{displayGrade('moonboard', g, sessionScale)}</option>{/each}
-                  </select>
-                </div>
-                <div class="field"><label>Grado User (se diverso)</label>
-                  <select bind:value={draft.gradoUser}>
-                    <option value="">—</option>
-                    {#each moonGradeOptions() as g}<option value={g}>{displayGrade('moonboard', g, sessionScale)}</option>{/each}
-                  </select>
-                </div>
-              {:else}
-                <div class="field"><label>Grado</label>
-                  <select bind:value={draft.grado}>
-                    <option value="">—</option>
-                    {#if isBoulder && sessionScale === 'king'}
-                      {#each KING_ROCK as k}<option value={kingToFont(k.id)}>{k.label} ({k.range})</option>{/each}
-                    {:else}
-                      {#each sc as g}<option value={g}>{displayGrade(disc, g, sessionScale)}</option>{/each}
-                    {/if}
-                  </select>
-                </div>
-              {/if}
-            </div>
             {#if !isCircuiti}
+              <div class="field"><label>Nome</label><input type="text" bind:value={draft.nome}></div>
+              <div class="field">
+                <label>Foto (max 3)</label>
+                <div class="file-upload-wrap">
+                  <label for="f_foto_{i}" class="file-upload-btn">Scegli file</label>
+                  <input type="file" id="f_foto_{i}" accept="image/*" multiple onchange={onPhotoChange}>
+                  <span class="file-upload-name">{draft.fotoFiles.length ? (draft.fotoFiles.length === 1 ? draft.fotoFiles[0].name : `${draft.fotoFiles.length} file selezionati`) : (draft.fotoExisting.length ? `${draft.fotoExisting.length} foto esistenti` : 'Nessun file scelto')}</span>
+                </div>
+              </div>
+              <div class="field-row">
+                {#if isMoon}
+                  <div class="field"><label>Grado Setter</label>
+                    <select bind:value={draft.gradoSetter}>
+                      <option value="">—</option>
+                      {#each moonGradeOptions() as g}<option value={g}>{displayGrade('moonboard', g, sessionScale)}</option>{/each}
+                    </select>
+                  </div>
+                  <div class="field"><label>Grado User (se diverso)</label>
+                    <select bind:value={draft.gradoUser}>
+                      <option value="">—</option>
+                      {#each moonGradeOptions() as g}<option value={g}>{displayGrade('moonboard', g, sessionScale)}</option>{/each}
+                    </select>
+                  </div>
+                {:else}
+                  <div class="field"><label>Grado</label>
+                    <select bind:value={draft.grado}>
+                      <option value="">—</option>
+                      {#if isBoulder && sessionScale === 'king'}
+                        {#each KING_ROCK as k}<option value={k.id}>{k.label} ({k.range})</option>{/each}
+                      {:else}
+                        {#each sc as g}<option value={g}>{displayGrade(disc, g, sessionScale)}</option>{/each}
+                      {/if}
+                    </select>
+                  </div>
+                {/if}
+              </div>
               <div class="field"><label>Tipo</label>
                 <select bind:value={draft.tipo}>
                   <option value=""></option>
@@ -320,7 +328,6 @@
               </div>
             {/if}
             {#if isCircuiti}
-              <div class="field"><label>Numero di prese</label><input type="number" bind:value={draft.numPrese}></div>
               {#if draft.showRipetute}
                 <div class="field-row">
                   <div class="field"><label>Ripetizioni</label><input type="number" bind:value={draft.ripetizioni}></div>
@@ -347,26 +354,28 @@
                 </select>
               </div>
             {/if}
-            <div class="field-row">
-              <div class="field">
-                <label>{isMoon ? 'Angolo moon' : 'Angolo parete'}</label>
-                <select bind:value={draft.angolo}>
-                  {#if isMoon}
-                    <option value="">—</option><option>25°</option><option>40°</option>
-                  {:else}
-                    <option value=""></option>
-                    {#each WALL_ANGLES as a}<option>{a}</option>{/each}
-                  {/if}
-                </select>
-              </div>
-              <div class="field"><label>Presa prevalente</label>
-                  <select bind:value={draft.presa}>
-                    <option value=""></option>
-                    {#each GRIP_TYPES as g}<option>{g}</option>{/each}
+            {#if !isCircuiti}
+              <div class="field-row">
+                <div class="field">
+                  <label>{isMoon ? 'Angolo moon' : 'Angolo parete'}</label>
+                  <select bind:value={draft.angolo}>
+                    {#if isMoon}
+                      <option value="">—</option><option>25°</option><option>40°</option>
+                    {:else}
+                      <option value=""></option>
+                      {#each WALL_ANGLES as a}<option>{a}</option>{/each}
+                    {/if}
                   </select>
+                </div>
+                <div class="field"><label>Presa prevalente</label>
+                    <select bind:value={draft.presa}>
+                      <option value=""></option>
+                      {#each GRIP_TYPES as g}<option>{g}</option>{/each}
+                    </select>
+                </div>
               </div>
-            </div>
-            <div class="field"><label>Nota</label><input type="text" bind:value={draft.notaBlocco}></div>
+              <div class="field"><label>Nota</label><input type="text" bind:value={draft.notaBlocco}></div>
+            {/if}
             {#if isMoon}
               <div class="field-row">
                 <div class="field"><label>Layout</label>

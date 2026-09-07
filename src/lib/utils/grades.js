@@ -48,36 +48,43 @@ export function getKingLabel(id) {
   return k ? `${k.label} (${k.range})` : id;
 }
 
-// Grado più alto raggiunto in una singola sessione (considera sia il campo
-// principale della disciplina sia i singoli blocchi/vie registrati).
+// Indice di un grado King Rock nella propria scala, gestendo sia i blocchi
+// nuovi (che salvano l'ID King direttamente, es. "3+") sia quelli vecchi
+// salvati prima di questa correzione (che avevano il grado già convertito
+// in Font, es. "6A" — li si riconosce perché non sono un ID King valido, e
+// si convertono al volo per il confronto).
+function kingGradeIndex(grade) {
+  let idx = KING_ROCK.findIndex(k => k.id === grade);
+  if (idx === -1) idx = KING_ROCK.findIndex(k => k.id === fontToKing(grade));
+  return idx;
+}
+
 // Grado più alto raggiunto in una singola sessione, considerando tutti i
 // blocchi/vie registrati per quella disciplina (per Moonboard conta il
 // grado User se presente, altrimenti il Setter — vedi sessionClimbs).
-//
-// NOTA STORICA (bug corretto il 4/9): qui c'era una funzione "canonical" che
-// ri-applicava KING_TO_FONT ai gradi già convertiti in Font, scambiando per
-// errore i gradi Font "4" e "5" (i due più facili della scala) per ID della
-// scala King — gonfiando enormemente il grado calcolato di qualunque blocco
-// facile (es. un blocco King "1", salvato correttamente come Font "4",
-// veniva riletto come se "4" fosse un ID King, convertito di nuovo e
-// interpretato come un grado molto più difficile). I blocchi in
-// blocchiByDiscipline salvano già il grado in Font puro: non va più
-// riconvertito qui.
 export function sessionGrade(s, disc) {
+  const sessionScale = s.scalaByDiscipline?.[disc];
+  const isKingBoulder = disc === 'boulder' && sessionScale === 'king';
   const scale = getScale(disc);
+  const idxOf = grade => isKingBoulder ? kingGradeIndex(grade) : gradeIndex(scale, grade);
   const grades = sessionClimbs(s, disc).map(item => item.gradoUser || item.grado || '').filter(Boolean);
-  return grades.reduce((best, grade) => gradeIndex(scale, grade) > gradeIndex(scale, best) ? grade : best, '');
+  return grades.reduce((best, grade) => idxOf(grade) > idxOf(best) ? grade : best, '');
 }
 
+// Confronta il grado migliore tra più sessioni, anche se sono state
+// registrate con scale diverse tra loro (es. una sessione in King Rock e
+// un'altra in Font): il confronto passa dal valore normalizzato comune
+// (vedi normalizedGradeValue), mentre il grado restituito resta quello
+// "nativo" della sessione vincente, per mostrarlo così come l'utente l'ha
+// registrato.
 export function bestGrade(disc, sessions) {
   let best = null;
-  let bestIdx = -1;
-  const sc = getScale(disc);
+  let bestNorm = -1;
   sessions.filter(s => sessionDisciplines(s).includes(disc)).forEach(s => {
     const g = sessionGrade(s, disc);
     if (g) {
-      const idx = gradeIndex(sc, g);
-      if (idx !== null && idx > bestIdx) { bestIdx = idx; best = g; }
+      const norm = normalizedGradeValue(disc, g);
+      if (norm !== null && norm > bestNorm) { bestNorm = norm; best = g; }
     }
   });
   return best;
@@ -116,13 +123,22 @@ const CONVERSIONS = {
 export function displayGrade(disc, grade, scale, profileScale) {
   if (!grade) return '';
   const pref = scale || profileScale || (disc === 'lead' ? 'french' : 'font');
+  const isBoulderFamily = !['lead', 'moonboard', 'circuiti', 'falesia'].includes(disc);
+  const isNativeKing = isBoulderFamily && KING_ROCK.some(k => k.id === grade);
 
-  if (pref === 'king' && !['lead', 'moonboard', 'circuiti', 'falesia'].includes(disc)) {
-    return getKingLabel(fontToKing(grade));
+  if (pref === 'king' && isBoulderFamily) {
+    return isNativeKing ? getKingLabel(grade) : getKingLabel(fontToKing(grade));
   }
 
+  // Un grado registrato nativamente in King (es. "3+") non è di per sé un
+  // grado Font: se l'utente vuole vederlo in un'altra scala, lo convertiamo
+  // prima nel suo equivalente Font approssimato, poi procediamo come al
+  // solito — la conversione tra sistemi di grading diversi è per natura
+  // approssimata, qui succede solo quando serve davvero (scala diversa da
+  // quella in cui è stato registrato).
+  const fontGrade = isNativeKing ? kingToFont(grade) : grade;
   const map = CONVERSIONS[pref]?.[(disc === 'circuiti' || disc === 'falesia') ? 'lead' : disc];
-  return map ? map(grade) : grade;
+  return map ? map(fontGrade) : fontGrade;
 }
 
 export function displaySessionGrade(session, grade, profileScale, disc = session.disciplina) {
