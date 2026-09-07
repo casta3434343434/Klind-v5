@@ -43,7 +43,7 @@
   function blankDraft() {
     return {
       nome: '', grado: '', gradoSetter: '', gradoUser: '', tipo: '', modalita: 'primo',
-      tentativi: '', rest: '', cadute: '', numPrese: '', ripetizioni: '', riposoCircuito: '', showRipetute: false,
+      tentativi: '', rest: '', cadute: '', numPrese: '', ripetizioni: '', riposoCircuito: '',
       lunghezza: '', settore: '', stelle: 0, angolo: '', presa: '', notaBlocco: '',
       tempo: '', esito: 'Completata', percorso: 'Standard IFSC (15m)',
       fotoFiles: [], fotoExisting: []
@@ -96,7 +96,6 @@
     draft = {
       ...blankDraft(),
       ...c,
-      showRipetute: !!(c.ripetizioni || c.riposoCircuito),
       fotoFiles: [],
       fotoExisting: c.foto || []
     };
@@ -277,7 +276,7 @@
             {/if}
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0;">
-            <button type="button" class="btn btn-ghost btn-sm" onclick={() => editingIndex === i ? cancelEdit() : editClimb(i)}>{editingIndex === i ? 'Chiudi' : 'Dettagli'}</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick={() => editingIndex === i ? cancelEdit() : editClimb(i)}>{editingIndex === i ? 'Chiudi' : isCircuiti ? 'Ripetute' : 'Dettagli'}</button>
             <button type="button" class="btn btn-danger btn-sm" onclick={() => removeClimb(i)}>Rimuovi</button>
           </div>
         </div>
@@ -328,14 +327,10 @@
               </div>
             {/if}
             {#if isCircuiti}
-              {#if draft.showRipetute}
-                <div class="field-row">
-                  <div class="field"><label>Ripetizioni</label><input type="number" bind:value={draft.ripetizioni}></div>
-                  <div class="field"><label>Recupero</label><input type="text" placeholder="es. 2 min" bind:value={draft.riposoCircuito}></div>
-                </div>
-              {:else}
-                <button type="button" class="btn btn-ghost btn-sm" style="margin-bottom:16px;" onclick={() => draft.showRipetute = true}>+ Ripetute</button>
-              {/if}
+              <div class="field-row">
+                <div class="field"><label>Ripetizioni</label><input type="number" bind:value={draft.ripetizioni}></div>
+                <div class="field"><label>Recupero</label><input type="text" placeholder="es. 2 min" bind:value={draft.riposoCircuito}></div>
+              </div>
             {:else}
               <div class="field-row">
                 <div class="field"><label>Tentativi</label><input type="number" bind:value={draft.tentativi}></div>
