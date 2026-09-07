@@ -4,7 +4,13 @@ const THEME_PALETTES = {
   identity: {
     label: 'Klind Identity',
     light: { bg: '#f3eee4', alt: '#e7dfd2', surface: '#fffaf2', surface2: '#d8c8b7', chalk: '#263746', muted: '#5e6d76', line: 'rgba(38,55,70,.18)', strong: 'rgba(38,55,70,.34)', lime: '#a93625', rust: '#842820' },
-    dark: { bg: '#628b98', alt: '#527985', surface: '#385764', surface2: '#496d79', chalk: '#f7f0e3', muted: '#e0e7e8', line: 'rgba(247,240,227,.24)', strong: 'rgba(247,240,227,.38)', lime: '#e06446', rust: '#f08c75' }
+    // Vero opposto della chiara: stessa identità calda (crema/ruggine), toni
+    // ribaltati invece del blu-teal scollegato di prima. Il testo scuro
+    // riusa letteralmente lo stesso crema dello sfondo chiaro (#f3eee4).
+    // "rust" è la stessa tinta di "lime" in scuro: bottoni al passaggio del
+    // mouse, badge e notifiche devono avere lo stesso arancio del logo e
+    // delle scritte attive, non una tonalità leggermente diversa.
+    dark: { bg: '#1c1713', alt: '#221c17', surface: '#2a231d', surface2: '#3d332a', chalk: '#f3eee4', muted: '#b3a495', line: 'rgba(243,238,228,.14)', strong: 'rgba(243,238,228,.26)', lime: '#e2624a', rust: '#e2624a' }
   }
 };
 

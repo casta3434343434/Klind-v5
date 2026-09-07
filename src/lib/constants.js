@@ -73,7 +73,7 @@ export const TEST_TYPES = ['maxhang20','maxhangbw','pullup','pullupweighted','cr
 export const TEST_LABELS = {maxhang20:'Max hang 20mm',maxhangbw:'Max hang % peso',pullup:'Trazioni max',pullupweighted:'Trazione zavorrata',critforce:'Critical Force',campus:'Campus reach',other:'Altro'};
 export const TEST_UNITS = {maxhang20:'kg',maxhangbw:'%',pullup:'reps',pullupweighted:'kg',critforce:'kg',campus:'gradini',other:''};
 
-export const DISCIPLINE_COLORS = {boulder:['#c66a3e','#d98b5e'],lead:['#78c6d5','#3c91a4'],moonboard:['#dca52f','#f6cf58'],speed:['#55a873','#398956'],circuiti:['#a06fc9','#c79ce8'],falesia:['#7a9e5c','#a3c98a']};
+export const DISCIPLINE_COLORS = {boulder:['#e2823f','#d98b5e'],lead:['#4fd0e6','#3c91a4'],moonboard:['#f5bb2e','#f6cf58'],speed:['#3ecb7f','#398956'],circuiti:['#b57bef','#c79ce8'],falesia:['#7a9e5c','#a3c98a']};
 
 export const SESSION_MOODS = [
   {id:'slow', img:'/reactions/mood-slow.webp', label:'A ritmo di lumaca'},

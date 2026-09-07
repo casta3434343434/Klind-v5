@@ -68,6 +68,9 @@
   function quickAdd(grade) {
     const climb = { nome: '', grado: grade, tipo: '', modalita: 'primo', tentativi: '', rest: '', numPrese: isCircuiti ? quickNumPrese : '', ripetizioni: '', riposoCircuito: '', angolo: '', presa: '', notaBlocco: '', foto: [] };
     climbs.push(climb);
+    // il numero di prese è specifico di ogni via: non resta impostato per il
+    // prossimo tap, va (ri)inserito apposta per la via successiva.
+    if (isCircuiti) quickNumPrese = '';
   }
 
   // Moonboard ha due righe di tap separate: il grado Setter (ufficiale, sulla

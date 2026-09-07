@@ -48,7 +48,7 @@
 
   function dayBackground(disciplines) {
     if (disciplines.length < 2) return '';
-    const colors = disciplines.map(disc => `color-mix(in srgb, var(--${disc === 'lead' ? 'vertical' : disc === 'moonboard' ? 'moon' : disc}) 24%, transparent)`);
+    const colors = disciplines.map(disc => `color-mix(in srgb, var(--${disc === 'lead' ? 'vertical' : disc === 'moonboard' ? 'moon' : disc}) 28%, transparent)`);
     if (colors.length === 2) return `linear-gradient(135deg, ${colors[0]} 0 50%, ${colors[1]} 50% 100%)`;
     const step = 100 / colors.length;
     const stops = colors.map((color, index) => `${color} ${index * step}% ${(index + 1) * step}%`).join(', ');

@@ -204,10 +204,10 @@ textarea{resize:vertical;min-height:74px;line-height:1.45;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
 .cal-dow{text-align:center;font-size:14px;color:var(--muted);font-family:var(--font-m);text-transform:uppercase;padding-bottom:8px;}
 .cal-cell{min-height:100px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg-alt);cursor:pointer;position:relative;transition:background-color .2s, border-color .2s;}
-.cal-cell.has-session-boulder { border:2px solid var(--boulder); background-color:color-mix(in srgb,var(--boulder) 18%,transparent); }
-.cal-cell.has-session-lead { border:2px solid var(--vertical); background-color:color-mix(in srgb,var(--vertical) 18%,transparent); }
-.cal-cell.has-session-moonboard { border:2px solid var(--moon); background-color:color-mix(in srgb,var(--moon) 18%,transparent); }
-.cal-cell.has-session-speed { border:2px solid var(--speed); background-color:color-mix(in srgb,var(--speed) 18%,transparent); }
+.cal-cell.has-session-boulder { border:2px solid var(--boulder); background-color:color-mix(in srgb,var(--boulder) 28%,transparent); }
+.cal-cell.has-session-lead { border:2px solid var(--vertical); background-color:color-mix(in srgb,var(--vertical) 28%,transparent); }
+.cal-cell.has-session-moonboard { border:2px solid var(--moon); background-color:color-mix(in srgb,var(--moon) 28%,transparent); }
+.cal-cell.has-session-speed { border:2px solid var(--speed); background-color:color-mix(in srgb,var(--speed) 28%,transparent); }
 .cal-cell.has-multi-session { border:2px solid var(--line-strong); background-color:var(--surface-2); background-size:cover; }
 .cal-cell.selected-day { background-color:color-mix(in srgb,var(--lime) 16%,transparent); border-color:var(--lime); box-shadow:inset 0 0 0 1px var(--lime); }
 .cal-cell.selected-day .d { color:var(--lime); }
